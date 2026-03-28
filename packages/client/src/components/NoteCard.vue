@@ -4,6 +4,7 @@ import { RouterLink } from "vue-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { client, orpc } from "../lib/orpc";
 import { useAuth } from "../composables/useAuth";
+import { useToast } from "../composables/useToast";
 import type { NoteWithAuthor } from "@aihackason/contract";
 
 const props = withDefaults(
@@ -17,6 +18,7 @@ const props = withDefaults(
 );
 
 const { user, isLoggedIn } = useAuth();
+const { show: showToast } = useToast();
 const queryClient = useQueryClient();
 
 const isOwner = computed(() => user.value?.id === props.note.userId);
@@ -65,6 +67,12 @@ const recommendMutation = useMutation({
   mutationFn: () => client.recommend.create({ noteId: props.note.id }),
   onSuccess: () => {
     queryClient.invalidateQueries();
+    const remaining = remainingRecommendationCount.value - 1;
+    if (remaining <= 0) {
+      showToast("推薦しました！今日の推薦枠を使い切りました", "info");
+    } else {
+      showToast(`推薦しました！残り ${remaining} 回`, "success");
+    }
   },
 });
 
@@ -258,13 +266,7 @@ function formatDate(dateStr: string) {
           />
         </svg>
         <span class="text-sm font-mono">{{ note.recommendCount }}</span>
-        <span v-if="isLoggedIn" class="text-sm font-mono" style="color: #3a3a55"
-          >{{ remainingRecommendationCount }} 回残り</span
-        >
-        <span v-if="recommendationCountForNote > 0" class="text-xs text-amber-700">
-          あなた{{ recommendationCountForNote }}
-        </span>
-        <span v-else-if="note.recommended" class="text-xs text-emerald-700">daily winner</span>
+        <span v-if="note.recommended" class="text-xs text-emerald-700">daily winner</span>
       </button>
     </div>
   </article>

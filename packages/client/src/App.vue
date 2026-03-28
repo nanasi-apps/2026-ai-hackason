@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { RouterView, RouterLink } from "vue-router";
 import { useAuth } from "./composables/useAuth";
+import { useToast } from "./composables/useToast";
 import { useRouter } from "vue-router";
 
 const { isLoggedIn, user, logout } = useAuth();
+const { toasts, dismiss } = useToast();
 const router = useRouter();
 
 function handleLogout() {
@@ -106,5 +108,28 @@ function handleLogout() {
     <footer class="text-center py-8 text-xs" style="color: #3a3a55">
       今北産業SNS — あなたの言葉を、AIが盛大に誤読する
     </footer>
+
+    <!-- Toast container -->
+    <div
+      class="fixed bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none"
+    >
+      <TransitionGroup name="toast">
+        <div
+          v-for="t in toasts"
+          :key="t.id"
+          class="pointer-events-auto flex items-center gap-3 rounded-full px-5 py-2.5 text-sm font-mono shadow-lg cursor-pointer"
+          :style="
+            t.type === 'error'
+              ? 'background-color: #2a1020; border: 1px solid #e85d9a60; color: #e85d9a'
+              : t.type === 'success'
+                ? 'background-color: #0f2a1a; border: 1px solid #4ade8060; color: #4ade80'
+                : 'background-color: #1a1a2e; border: 1px solid #7c6af760; color: #a99af9'
+          "
+          @click="dismiss(t.id)"
+        >
+          {{ t.message }}
+        </div>
+      </TransitionGroup>
+    </div>
   </div>
 </template>

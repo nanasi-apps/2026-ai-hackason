@@ -99,3 +99,19 @@ body {
 .animate-fade-up {
   animation: fade-up 0.3s ease-out;
 }
+
+/* Toast transition */
+.toast-enter-active {
+  transition: all 0.25s ease-out;
+}
+.toast-leave-active {
+  transition: all 0.2s ease-in;
+}
+.toast-enter-from {
+  opacity: 0;
+  transform: translateY(12px) scale(0.95);
+}
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(6px) scale(0.97);
+}
