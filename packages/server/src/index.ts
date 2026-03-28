@@ -2,9 +2,9 @@ import { implement } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { CORSPlugin } from "@orpc/server/plugins";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
-import { eq, desc, and, sql, count } from "drizzle-orm";
+import { eq, desc, and, isNull, sql, count } from "drizzle-orm";
 import { contract } from "@aihackason/contract";
-import { users, notes, likes } from "./db/schema";
+import { users, notes, likes, recommendations } from "./db/schema";
 import { hashSync, compareSync } from "bcrypt-ts";
 import { SignJWT, jwtVerify } from "jose";
 import { summarizeIntoThreeWords, type AiBinding } from "./threeWordSummary";
@@ -33,6 +33,9 @@ type NoteWithUserRow = {
   note: typeof notes.$inferSelect;
   author: typeof users.$inferSelect;
 };
+
+const RECOMMEND_LIMIT = 3;
+const UNLOCK_THRESHOLD = 3;
 
 // ========== JWT Helpers ==========
 
@@ -129,6 +132,25 @@ async function enrichNotes(
 
   const replyCountMap = new Map(replyCounts.map((rc) => [rc.replyTo!, rc.count]));
 
+  const recommendationCounts = await db
+    .select({
+      noteId: recommendations.noteId,
+      count: count(),
+    })
+    .from(recommendations)
+    .where(
+      and(
+        sql`${recommendations.noteId} IN (${sql.join(
+          noteIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})`,
+        sql`date(${recommendations.createdAt}) = date('now')`,
+      ),
+    )
+    .groupBy(recommendations.noteId);
+
+  const recommendationCountMap = new Map(recommendationCounts.map((item) => [item.noteId, item.count]));
+
   // Get user's likes for current user
   let likedSet = new Set<string>();
   if (currentUserId) {
@@ -147,18 +169,24 @@ async function enrichNotes(
     likedSet = new Set(userLikes.map((l) => l.noteId));
   }
 
-  return noteRows.map((row) => ({
-    id: row.note.id,
-    content: row.note.content,
-    summary: row.note.summary ?? null,
-    createdAt: row.note.createdAt,
-    userId: row.note.userId,
-    replyTo: row.note.replyTo ?? null,
-    author: { id: row.author.id, username: row.author.username, createdAt: row.author.createdAt },
-    likeCount: likeCountMap.get(row.note.id) ?? 0,
-    replyCount: replyCountMap.get(row.note.id) ?? 0,
-    liked: likedSet.has(row.note.id),
-  }));
+  return noteRows.map((row) => {
+    const canViewContent = currentUserId === row.note.userId || row.note.isUnlocked;
+
+    return {
+      id: row.note.id,
+      content: canViewContent ? row.note.content : "",
+      summary: row.note.summary ?? null,
+      createdAt: row.note.createdAt,
+      userId: row.note.userId,
+      replyTo: row.note.replyTo ?? null,
+      author: { id: row.author.id, username: row.author.username, createdAt: row.author.createdAt },
+      likeCount: likeCountMap.get(row.note.id) ?? 0,
+      replyCount: replyCountMap.get(row.note.id) ?? 0,
+      liked: likedSet.has(row.note.id),
+      recommendCount: recommendationCountMap.get(row.note.id) ?? 0,
+      unlocked: row.note.isUnlocked,
+    };
+  });
 }
 
 async function enrichSingleNote(
@@ -169,6 +197,75 @@ async function enrichSingleNote(
 ) {
   const result = await enrichNotes(db, [{ note, author }], currentUserId);
   return result[0];
+}
+
+async function getRemainingRecommendations(db: DrizzleD1Database, userId: string) {
+  const [result] = await db
+    .select({ count: count() })
+    .from(recommendations)
+    .where(
+      and(eq(recommendations.userId, userId), sql`date(${recommendations.createdAt}) = date('now')`),
+    );
+
+  return Math.max(RECOMMEND_LIMIT - result.count, 0);
+}
+
+async function refreshNoteUnlockState(db: DrizzleD1Database, noteId: string) {
+  const [result] = await db
+    .select({ count: count() })
+    .from(recommendations)
+    .where(eq(recommendations.noteId, noteId));
+
+  const recommendCount = result.count;
+  const unlocked = recommendCount >= UNLOCK_THRESHOLD;
+
+  await db
+    .update(notes)
+    .set({ recommendCount, isUnlocked: unlocked })
+    .where(eq(notes.id, noteId));
+
+  return { recommendCount, unlocked };
+}
+
+async function getDailyWinnerNote(
+  db: DrizzleD1Database,
+  currentUserId: string | null,
+  day: string,
+) {
+  const winners = await db
+    .select({
+      noteId: recommendations.noteId,
+      count: count(),
+      latestAt: sql<string>`max(${recommendations.createdAt})`,
+    })
+    .from(recommendations)
+    .where(sql`date(${recommendations.createdAt}) = ${day}`)
+    .groupBy(recommendations.noteId)
+    .orderBy(desc(count()), desc(sql`max(${recommendations.createdAt})`))
+    .limit(1);
+
+  const winner = winners[0];
+  if (!winner) {
+    return null;
+  }
+
+  const rows = await db
+    .select({ note: notes, author: users })
+    .from(notes)
+    .innerJoin(users, eq(notes.userId, users.id))
+    .where(eq(notes.id, winner.noteId));
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const enriched = await enrichSingleNote(db, rows[0].note, rows[0].author, currentUserId);
+
+  return {
+    ...enriched,
+    content: rows[0].note.content,
+    unlocked: true,
+  };
 }
 
 // ========== Implementation ==========
@@ -259,6 +356,8 @@ const createNote = os.note.create.handler(async ({ input, context }) => {
       userId: auth.userId,
       content: input.content,
       replyTo: input.replyTo ?? null,
+      recommendCount: 0,
+      isUnlocked: false,
     })
     .returning();
 
@@ -281,6 +380,7 @@ const listNotes = os.note.list.handler(async ({ input, context }) => {
     .select({ note: notes, author: users })
     .from(notes)
     .innerJoin(users, eq(notes.userId, users.id))
+    .where(isNull(notes.replyTo))
     .orderBy(desc(notes.createdAt))
     .limit(input.limit)
     .offset(input.offset);
@@ -320,6 +420,7 @@ const deleteNote = os.note.delete.handler(async ({ input, context }) => {
 
   // Delete associated likes first
   await auth.db.delete(likes).where(eq(likes.noteId, input.id));
+  await auth.db.delete(recommendations).where(eq(recommendations.noteId, input.id));
   await auth.db.delete(notes).where(eq(notes.id, input.id));
   return { success: true };
 });
@@ -365,6 +466,51 @@ const noteReplies = os.note.replies.handler(async ({ input, context }) => {
     .offset(input.offset);
 
   return enrichNotes(ctx.db, rows, currentUserId);
+});
+
+const topRecommended = os.note.topRecommended.handler(async ({ input, context }) => {
+  const ctx = context as Context;
+  const currentUserId = await optionalAuth(ctx);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const topIds = await ctx.db
+    .select({
+      noteId: recommendations.noteId,
+      count: count(),
+    })
+    .from(recommendations)
+    .where(sql`date(${recommendations.createdAt}) = ${today}`)
+    .groupBy(recommendations.noteId)
+    .orderBy(desc(count()), desc(sql`max(${recommendations.createdAt})`))
+    .limit(input.limit);
+
+  if (topIds.length === 0) {
+    return [];
+  }
+
+  const ids = topIds.map((item) => item.noteId);
+  const rows = await ctx.db
+    .select({ note: notes, author: users })
+    .from(notes)
+    .innerJoin(users, eq(notes.userId, users.id))
+    .where(sql`${notes.id} IN (${sql.join(ids.map((id) => sql`${id}`), sql`, `)})`);
+
+  const enriched = await enrichNotes(ctx.db, rows, currentUserId);
+  const orderMap = new Map(ids.map((id, index) => [id, index]));
+
+  return enriched.sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0));
+});
+
+const dailyWinner = os.note.dailyWinner.handler(async ({ context }) => {
+  const ctx = context as Context;
+  const currentUserId = await optionalAuth(ctx);
+  const day = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const note = await getDailyWinnerNote(ctx.db, currentUserId, day);
+
+  return {
+    day,
+    note,
+  };
 });
 
 // --- Likes ---
@@ -429,6 +575,107 @@ const likeStatus = os.like.status.handler(async ({ input, context }) => {
   };
 });
 
+// --- Recommendations ---
+
+const recommendCreate = os.recommend.create.handler(async ({ input, context }) => {
+  const ctx = context as Context;
+  const auth = await requireAuth(ctx, ctx.headers);
+
+  const [note] = await auth.db.select().from(notes).where(eq(notes.id, input.noteId));
+  if (!note) {
+    throw new Error("Note not found");
+  }
+
+  const remainingBefore = await getRemainingRecommendations(auth.db, auth.userId);
+  if (remainingBefore <= 0) {
+    throw new Error("Recommendation limit reached");
+  }
+
+  const inserted = await auth.db
+    .insert(recommendations)
+    .values({
+      id: crypto.randomUUID(),
+      userId: auth.userId,
+      noteId: input.noteId,
+    })
+    .returning();
+
+  const [recommendation] = inserted;
+  const { recommendCount } = await refreshNoteUnlockState(auth.db, input.noteId);
+  const remainingCount = await getRemainingRecommendations(auth.db, auth.userId);
+  const day = new Date().toISOString().slice(0, 10);
+
+  return {
+    recommendation: {
+      id: recommendation.id,
+      userId: recommendation.userId,
+      noteId: recommendation.noteId,
+      createdAt: recommendation.createdAt,
+    },
+    recommendCount,
+    remainingCount,
+    day,
+  };
+});
+
+const recommendDelete = os.recommend.delete.handler(async ({ input, context }) => {
+  const ctx = context as Context;
+  const auth = await requireAuth(ctx, ctx.headers);
+
+  const [recommendation] = await auth.db
+    .select()
+    .from(recommendations)
+    .where(eq(recommendations.id, input.recommendationId));
+
+  if (!recommendation) {
+    throw new Error("Recommendation not found");
+  }
+
+  if (recommendation.userId !== auth.userId) {
+    throw new Error("Forbidden");
+  }
+
+  await auth.db.delete(recommendations).where(eq(recommendations.id, input.recommendationId));
+
+  const { recommendCount } = await refreshNoteUnlockState(auth.db, recommendation.noteId);
+  const remainingCount = await getRemainingRecommendations(auth.db, auth.userId);
+  const day = new Date().toISOString().slice(0, 10);
+
+  return {
+    success: true,
+    recommendCount,
+    remainingCount,
+    day,
+  };
+});
+
+const recommendListMine = os.recommend.listMine.handler(async ({ context }) => {
+  const ctx = context as Context;
+  const auth = await requireAuth(ctx, ctx.headers);
+
+  const items = await auth.db
+    .select()
+    .from(recommendations)
+    .where(
+      and(eq(recommendations.userId, auth.userId), sql`date(${recommendations.createdAt}) = date('now')`),
+    )
+    .orderBy(desc(recommendations.createdAt));
+
+  const remainingCount = await getRemainingRecommendations(auth.db, auth.userId);
+  const day = new Date().toISOString().slice(0, 10);
+
+  return {
+    recommendations: items.map((item) => ({
+      id: item.id,
+      userId: item.userId,
+      noteId: item.noteId,
+      createdAt: item.createdAt,
+    })),
+    remainingCount,
+    day,
+  };
+});
+
 // ========== Router ==========
 
 const router = os.router({
@@ -447,10 +694,17 @@ const router = os.router({
     delete: deleteNote,
     listByUser: listNotesByUser,
     replies: noteReplies,
+    topRecommended,
+    dailyWinner,
   },
   like: {
     toggle: likeToggle,
     status: likeStatus,
+  },
+  recommend: {
+    create: recommendCreate,
+    delete: recommendDelete,
+    listMine: recommendListMine,
   },
 });
 

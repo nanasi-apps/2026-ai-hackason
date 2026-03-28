@@ -27,12 +27,7 @@ const replyMutation = useMutation({
   onSuccess: () => {
     replyContent.value = "";
     replyError.value = "";
-    queryClient.invalidateQueries({
-      queryKey: orpc.note.replies.queryOptions({ input: { noteId: props.noteId } }).queryKey,
-    });
-    queryClient.invalidateQueries({
-      queryKey: orpc.note.get.queryOptions({ input: { id: props.noteId } }).queryKey,
-    });
+    queryClient.invalidateQueries();
   },
   onError: (e: Error) => {
     replyError.value = e.message || "Failed to reply";
@@ -63,7 +58,7 @@ function handleReply() {
         />
         <div class="flex items-center justify-between mt-2">
           <p v-if="replyError" class="text-red-500 text-sm">{{ replyError }}</p>
-          <span v-else class="text-sm text-gray-400">{{ replyContent.length }} / 10000</span>
+          <span v-else class="text-sm text-gray-400">{{ replyContent.length }} / 5000</span>
           <button
             @click="handleReply"
             :disabled="!replyContent.trim() || replyMutation.isPending.value"

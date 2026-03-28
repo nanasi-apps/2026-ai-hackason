@@ -16,8 +16,11 @@ function handleLogout() {
   <div class="min-h-screen bg-gray-50">
     <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
       <div class="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-        <RouterLink to="/" class="text-xl font-bold text-gray-900">SNS</RouterLink>
+        <RouterLink to="/" class="text-xl font-bold text-gray-900">MISREADER</RouterLink>
         <nav class="flex items-center gap-4">
+          <RouterLink to="/recommend" class="text-sm text-gray-600 hover:text-gray-900">
+            Daily Recommend
+          </RouterLink>
           <template v-if="isLoggedIn">
             <RouterLink
               :to="`/user/${user?.username}`"

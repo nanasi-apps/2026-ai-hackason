@@ -117,7 +117,8 @@
 | `note.delete`     | `{ id }` ※自分の投稿のみ          | `{ success }`                            |
 | `note.listByUser` | `{ username, limit?, offset? }`   | `{ notes[] }`                            |
 | `note.replies`    | `{ noteId, limit?, offset? }`     | `{ notes[] }` (その投稿への返信一覧)     |
-| `note.topRecommended` | `{ limit? }`                  | `{ notes[] }` (推薦数の多い順。デフォルトTop 3) |
+| `note.topRecommended` | `{ limit? }`                  | `{ notes[] }` (当日推薦数の多い順。UI補助用) |
+| `note.dailyWinner` | なし | `{ day, note }` (前日集計で最も推薦された投稿) |
 
 ### Like（いいね）
 
@@ -130,9 +131,9 @@
 
 | エンドポイント | Input | Output |
 | -------------- | ----- | ------ |
-| `recommend.create` | `{ noteId }` ※認証必須 | `{ recommendation, recommendCount, remainingCount, unlocked }` |
-| `recommend.delete` | `{ recommendationId }` ※認証必須 | `{ success, recommendCount, remainingCount, unlocked }` |
-| `recommend.listMine` | なし ※認証必須 | `{ recommendations[], remainingCount }` |
+| `recommend.create` | `{ noteId }` ※認証必須 | `{ recommendation, recommendCount, remainingCount, day }` |
+| `recommend.delete` | `{ recommendationId }` ※認証必須 | `{ success, recommendCount, remainingCount, day }` |
+| `recommend.listMine` | なし ※認証必須 | `{ recommendations[], remainingCount, day }` |
 
 ---
 
@@ -157,7 +158,7 @@
 3. `note.replies` エンドポイント追加
 4. `like.toggle` / `like.status` エンドポイント追加
 5. `recommend.create` / `recommend.delete` / `recommend.listMine` / `note.topRecommended` を追加
-6. 原文の公開条件として「推薦数が閾値以上なら解放」を定義
+6. 原文の公開条件として「前日の最多推薦投稿が翌日に解放される」を定義
 
 #### Server
 
@@ -167,8 +168,8 @@
 4. `note.create` に返信対応
 5. `note.replies` 実装
 6. 推薦は1ユーザー最大3件、同一投稿への複数推薦可のバリデーション実装
-7. 推薦数が閾値に達したら `is_unlocked` を更新
-8. `recommend.create` / `recommend.delete` / `recommend.listMine` / `note.topRecommended` 実装
+7. 推薦は当日単位で集計し、前日の最多推薦投稿を取得できるようにする
+8. `recommend.create` / `recommend.delete` / `recommend.listMine` / `note.topRecommended` / `note.dailyWinner` 実装
 9. 既存の note 系エンドポイントに likeCount, replyCount, liked, recommendCount, unlocked を付与
 
 #### Client
@@ -177,9 +178,10 @@
 2. NoteCard に 返信数の表示を追加
 3. `/:noteId` ページに返信一覧 + 返信フォームを追加
 4. 返信投稿 UI
-5. 推薦ボタン + 残り推薦数の表示
-6. タイムライン上に推薦数 Top 3 を表示
-7. 解放済み投稿だけ原文を閲覧できる UI を追加
+5. 推薦ボタン + その日の残り推薦数の表示
+6. タイムラインに「日次集計で翌日に解放される」案内を表示
+7. `/recommend` ページを追加し、前日の1位投稿を表示
+8. `Daily Recommend` 対象だけ原文を閲覧できる UI を追加
 
 ### Phase 2: AI要約（後日）
 
@@ -195,6 +197,6 @@
 - JWT トークンをAuthorizationヘッダーで送信
 - 投稿の削除は本人のみ
 - いいねは認証必須、1ユーザー1投稿1いいね
-- 推薦は認証必須、1ユーザーあたり合計3件まで
-- 原文の公開は推薦数による解放条件を満たした投稿だけ
+- 推薦は認証必須、1ユーザーあたり1日3件まで
+- 原文の公開は前日の日次集計で1位になった投稿のみ
 - XSS対策: Vueのデフォルトエスケープを活用

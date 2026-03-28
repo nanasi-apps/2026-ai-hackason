@@ -1,4 +1,10 @@
-import { sqliteTable, text, uniqueIndex, type AnySQLiteColumn } from "drizzle-orm/sqlite-core";
+import {
+  sqliteTable,
+  text,
+  uniqueIndex,
+  integer,
+  type AnySQLiteColumn,
+} from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 
 export const users = sqliteTable("users", {
@@ -17,6 +23,8 @@ export const notes = sqliteTable("notes", {
     .references(() => users.id),
   content: text("content").notNull(),
   summary: text("summary"),
+  recommendCount: integer("recommend_count").notNull().default(0),
+  isUnlocked: integer("is_unlocked", { mode: "boolean" }).notNull().default(false),
   replyTo: text("reply_to").references((): AnySQLiteColumn => notes.id),
   createdAt: text("created_at")
     .notNull()
@@ -39,3 +47,16 @@ export const likes = sqliteTable(
   },
   (table) => [uniqueIndex("likes_user_note_unique").on(table.userId, table.noteId)],
 );
+
+export const recommendations = sqliteTable("recommendations", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  noteId: text("note_id")
+    .notNull()
+    .references(() => notes.id),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});

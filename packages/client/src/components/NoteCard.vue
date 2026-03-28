@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { RouterLink } from "vue-router";
-import { useMutation, useQueryClient } from "@tanstack/vue-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { client, orpc } from "../lib/orpc";
 import { useAuth } from "../composables/useAuth";
 import type { NoteWithAuthor } from "@aihackason/contract";
@@ -20,16 +20,26 @@ const { user, isLoggedIn } = useAuth();
 const queryClient = useQueryClient();
 
 const isOwner = computed(() => user.value?.id === props.note.userId);
+const isLocked = computed(() => !props.note.unlocked && !isOwner.value);
 
 const localLiked = ref(props.note.liked);
 const localLikeCount = ref(props.note.likeCount);
 
+const { data: myRecommendations } = useQuery({
+  ...orpc.recommend.listMine.queryOptions(),
+  enabled: isLoggedIn,
+});
+
+const recommendationCountForNote = computed(
+  () => myRecommendations.value?.recommendations.filter((item) => item.noteId === props.note.id).length ?? 0,
+);
+
+const remainingRecommendationCount = computed(() => myRecommendations.value?.remainingCount ?? 0);
+
 const deleteMutation = useMutation({
   mutationFn: () => client.note.delete({ id: props.note.id }),
   onSuccess: () => {
-    queryClient.invalidateQueries({
-      queryKey: orpc.note.list.queryOptions({ input: {} }).queryKey,
-    });
+    queryClient.invalidateQueries();
   },
 });
 
@@ -38,6 +48,14 @@ const likeMutation = useMutation({
   onSuccess: (data) => {
     localLiked.value = data.liked;
     localLikeCount.value = data.likeCount;
+    queryClient.invalidateQueries();
+  },
+});
+
+const recommendMutation = useMutation({
+  mutationFn: () => client.recommend.create({ noteId: props.note.id }),
+  onSuccess: () => {
+    queryClient.invalidateQueries();
   },
 });
 
@@ -50,6 +68,11 @@ function handleDelete() {
 function handleLike() {
   if (!isLoggedIn.value) return;
   likeMutation.mutate();
+}
+
+function handleRecommend() {
+  if (!isLoggedIn.value || remainingRecommendationCount.value <= 0) return;
+  recommendMutation.mutate();
 }
 
 function formatDate(dateStr: string) {
@@ -92,16 +115,21 @@ const displayContent = computed(() => {
       <RouterLink :to="`/${note.replyTo}`" class="hover:underline"> Replying to a post </RouterLink>
     </div>
 
-    <p class="text-gray-800 whitespace-pre-wrap break-words">{{ displayContent }}</p>
+    <div v-if="isLocked" class="rounded-md border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+      <p class="font-medium">Original text is locked.</p>
+      <p class="mt-1 text-amber-800">
+        Daily recommendations are aggregated at the end of the day. The top note opens tomorrow.
+      </p>
+    </div>
+    <p v-else class="text-gray-800 whitespace-pre-wrap break-words">{{ displayContent }}</p>
     <button
-      v-if="isLong && !expanded"
+      v-if="!isLocked && isLong && !expanded"
       @click="expanded = true"
       class="text-sm text-gray-500 hover:text-gray-700 mt-1"
     >
       Show more
     </button>
 
-    <!-- Actions: Like + Reply count -->
     <div class="flex items-center gap-4 mt-3 pt-2 border-t border-gray-100">
       <button
         @click="handleLike"
@@ -150,6 +178,28 @@ const displayContent = computed(() => {
         </svg>
         <span>{{ note.replyCount }}</span>
       </RouterLink>
+
+      <button
+        @click="handleRecommend"
+        :disabled="!isLoggedIn || remainingRecommendationCount <= 0 || recommendMutation.isPending.value"
+        class="flex items-center gap-1 text-sm text-amber-600 transition-colors disabled:text-gray-300"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="w-4 h-4"
+        >
+          <path
+            d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321 1.01l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.386a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0l-4.725 2.886a.562.562 0 01-.84-.611l1.285-5.386a.562.562 0 00-.182-.557L2.04 10.407a.563.563 0 01.321-1.01l5.518-.442a.563.563 0 00.475-.345l2.125-5.11z"
+          />
+        </svg>
+        <span>{{ note.recommendCount }}</span>
+        <span v-if="isLoggedIn" class="text-xs text-gray-400">today {{ remainingRecommendationCount }} left</span>
+        <span v-if="recommendationCountForNote > 0" class="text-xs text-amber-700">
+          あなた{{ recommendationCountForNote }}
+        </span>
+      </button>
     </div>
   </div>
 </template>

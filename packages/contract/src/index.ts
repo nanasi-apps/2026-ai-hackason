@@ -34,6 +34,8 @@ export const NoteWithAuthorSchema = NoteSchema.extend({
   likeCount: z.number(),
   replyCount: z.number(),
   liked: z.boolean(),
+  recommendCount: z.number(),
+  unlocked: z.boolean(),
 });
 
 export type NoteWithAuthor = z.infer<typeof NoteWithAuthorSchema>;
@@ -45,6 +47,22 @@ export const ThreeWordSummarySchema = z.object({
 });
 
 export type ThreeWordSummary = z.infer<typeof ThreeWordSummarySchema>;
+
+export const RecommendationSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  noteId: z.string(),
+  createdAt: z.string(),
+});
+
+export type Recommendation = z.infer<typeof RecommendationSchema>;
+
+export const DailyWinnerSchema = z.object({
+  day: z.string(),
+  note: NoteWithAuthorSchema.nullable(),
+});
+
+export type DailyWinner = z.infer<typeof DailyWinnerSchema>;
 
 // ========== Auth Contract ==========
 
@@ -77,7 +95,7 @@ const me = oc.output(UserSchema);
 const createNote = oc
   .input(
     z.object({
-      content: z.string().min(1).max(10000),
+      content: z.string().min(1).max(5000),
       replyTo: z.string().optional(),
     }),
   )
@@ -118,6 +136,16 @@ const noteReplies = oc
   )
   .output(z.array(NoteWithAuthorSchema));
 
+const topRecommendedNotes = oc
+  .input(
+    z.object({
+      limit: z.number().int().min(1).max(20).optional().default(3),
+    }),
+  )
+  .output(z.array(NoteWithAuthorSchema));
+
+const dailyWinnerNote = oc.output(DailyWinnerSchema);
+
 // ========== AI Contract ==========
 
 const summarizeThreeWords = oc
@@ -139,6 +167,38 @@ const likeToggle = oc.input(z.object({ noteId: z.string() })).output(LikeRespons
 
 const likeStatus = oc.input(z.object({ noteId: z.string() })).output(LikeResponseSchema);
 
+// ========== Recommendation Contract ==========
+
+const RecommendCreateResponseSchema = z.object({
+  recommendation: RecommendationSchema,
+  recommendCount: z.number(),
+  remainingCount: z.number(),
+  day: z.string(),
+});
+
+const RecommendDeleteResponseSchema = z.object({
+  success: z.boolean(),
+  recommendCount: z.number(),
+  remainingCount: z.number(),
+  day: z.string(),
+});
+
+const RecommendListMineResponseSchema = z.object({
+  recommendations: z.array(RecommendationSchema),
+  remainingCount: z.number(),
+  day: z.string(),
+});
+
+const recommendCreate = oc
+  .input(z.object({ noteId: z.string() }))
+  .output(RecommendCreateResponseSchema);
+
+const recommendDelete = oc
+  .input(z.object({ recommendationId: z.string() }))
+  .output(RecommendDeleteResponseSchema);
+
+const recommendListMine = oc.output(RecommendListMineResponseSchema);
+
 // ========== Contract ==========
 
 export const contract = {
@@ -157,9 +217,16 @@ export const contract = {
     delete: deleteNote,
     listByUser: listNotesByUser,
     replies: noteReplies,
+    topRecommended: topRecommendedNotes,
+    dailyWinner: dailyWinnerNote,
   },
   like: {
     toggle: likeToggle,
     status: likeStatus,
+  },
+  recommend: {
+    create: recommendCreate,
+    delete: recommendDelete,
+    listMine: recommendListMine,
   },
 };

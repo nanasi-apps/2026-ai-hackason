@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "pnpm run db:migrate:local",
     "dev": "wrangler dev",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply aihackason-db --local",
