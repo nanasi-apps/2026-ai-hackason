@@ -8,53 +8,84 @@ const { data, isLoading, error } = useQuery(orpc.note.dailyWinner.queryOptions()
 
 const formattedPublishedDay = computed(() => {
   if (!data.value?.publishedDay) return "";
-  return new Date(`${data.value.publishedDay}T00:00:00`).toLocaleDateString();
+  return new Date(`${data.value.publishedDay}T00:00:00`).toLocaleDateString("ja-JP");
 });
 
 const formattedSourceDay = computed(() => {
   if (!data.value?.sourceDay) return "";
-  return new Date(`${data.value.sourceDay}T00:00:00`).toLocaleDateString();
+  return new Date(`${data.value.sourceDay}T00:00:00`).toLocaleDateString("ja-JP");
 });
 </script>
 
 <template>
-  <section>
-    <div
-      class="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-white p-6"
+  <div>
+    <!-- Hero -->
+    <section
+      class="mb-8 rounded-2xl border p-5"
+      style="
+        background: linear-gradient(135deg, #12121a 0%, #171728 60%, #12121a 100%);
+        border-color: #2a2a40;
+      "
     >
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
+      <p class="text-xs font-mono tracking-[0.28em] uppercase" style="color: #f59e0b">
         Daily Recommend
       </p>
-      <h1 class="mt-2 text-2xl font-semibold text-gray-900">Yesterday's most recommended note</h1>
-      <p class="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
-        At the end of each day, recommendations are aggregated and the top post is opened on the
-        next day. This page is the place to check that daily winner as a 3-word misread only.
+      <h1 class="mt-2 text-2xl font-semibold leading-tight" style="color: #ffffff">
+        昨日いちばん推された投稿
+      </h1>
+      <p class="mt-3 text-sm leading-6" style="color: #6b6b8a">
+        毎日の推薦が集計され、トップの投稿が翌日ここに表示されます。3語の誤読のみ公開。
       </p>
-      <p v-if="formattedPublishedDay" class="mt-3 text-sm font-medium text-amber-800">
-        Published day: {{ formattedPublishedDay }}
-      </p>
-      <p v-if="formattedSourceDay" class="mt-1 text-sm text-gray-600">
-        Source day: {{ formattedSourceDay }}
+      <div v-if="formattedPublishedDay" class="mt-4 flex flex-wrap items-center gap-3">
+        <span class="text-xs font-mono" style="color: #f59e0b">
+          掲載日: {{ formattedPublishedDay }}
+        </span>
+        <span v-if="formattedSourceDay" class="text-xs font-mono" style="color: #3a3a55">
+          集計日: {{ formattedSourceDay }}
+        </span>
         <span
           v-if="data?.manual"
-          class="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800"
+          class="rounded-full px-2 py-0.5 text-xs font-mono"
+          style="background-color: #f59e0b20; color: #f59e0b; border: 1px solid #f59e0b40"
         >
-          manual publish
+          手動公開
         </span>
-      </p>
+      </div>
+    </section>
+
+    <!-- Loading -->
+    <div v-if="isLoading" class="py-12 text-center">
+      <div
+        class="inline-block h-5 w-5 rounded-full border-2 animate-spin"
+        style="border-color: #2a2a40; border-top-color: #f59e0b"
+      ></div>
     </div>
 
-    <div v-if="isLoading" class="py-10 text-center text-gray-400">Loading daily recommend...</div>
-    <div v-else-if="error" class="py-10 text-center text-red-500">{{ error.message }}</div>
-    <div v-else-if="data?.note" class="mt-6">
+    <!-- Error -->
+    <div v-else-if="error" class="py-10 text-center">
+      <p class="text-sm font-mono" style="color: #e85d9a">{{ error.message }}</p>
+    </div>
+
+    <!-- Winner card -->
+    <div v-else-if="data?.note" class="mb-4">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-xs font-mono tracking-widest uppercase" style="color: #f59e0b">
+          winner
+        </span>
+        <div class="flex-1 h-px" style="background-color: #2a2a40"></div>
+      </div>
       <NoteCard :note="data.note" :full="true" />
     </div>
+
+    <!-- Empty -->
     <div
       v-else
-      class="mt-6 rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-500"
+      class="rounded-xl border border-dashed p-10 text-center"
+      style="border-color: #2a2a40"
     >
-      No daily winner yet. Once recommendations are collected for a day, the top note appears here
-      tomorrow.
+      <p class="text-sm font-mono" style="color: #3a3a55">
+        まだ winner がいません。推薦が集まると翌日ここに表示されます。
+      </p>
     </div>
-  </section>
+  </div>
 </template>

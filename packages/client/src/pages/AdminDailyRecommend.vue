@@ -23,39 +23,83 @@ const publishMutation = useMutation({
 </script>
 
 <template>
-  <section>
-    <div class="rounded-2xl border border-gray-200 bg-white p-6">
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Admin</p>
-      <h1 class="mt-2 text-2xl font-semibold text-gray-900">Daily Recommend Control</h1>
-      <p class="mt-2 text-sm leading-6 text-gray-600">
-        Admin users can publish today's Daily Recommend immediately without waiting for the next
-        day.
+  <div>
+    <!-- Header -->
+    <section
+      class="mb-8 rounded-2xl border p-5"
+      style="
+        background: linear-gradient(135deg, #12121a 0%, #171728 60%, #12121a 100%);
+        border-color: #2a2a40;
+      "
+    >
+      <p class="text-xs font-mono tracking-[0.28em] uppercase" style="color: #6b6b8a">Admin</p>
+      <h1 class="mt-2 text-2xl font-semibold leading-tight" style="color: #ffffff">
+        Daily Recommend 管理
+      </h1>
+      <p class="mt-3 text-sm leading-6" style="color: #6b6b8a">
+        管理者は翌日を待たず、今日の Daily Recommend を即時公開できます。
       </p>
 
-      <div v-if="isAdmin" class="mt-5 flex items-center gap-3">
+      <div v-if="isAdmin" class="mt-5">
         <button
           @click="publishMutation.mutate()"
           :disabled="publishMutation.isPending.value"
-          class="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-800 disabled:opacity-50"
+          class="rounded-full px-5 py-2 text-sm font-medium transition-all disabled:opacity-40"
+          style="background: linear-gradient(135deg, #7c6af7 0%, #e85d9a 100%); color: white"
         >
-          {{ publishMutation.isPending.value ? "Publishing..." : "Publish now" }}
+          {{ publishMutation.isPending.value ? "公開中..." : "今すぐ公開" }}
         </button>
       </div>
-      <p v-else class="mt-5 text-sm text-red-500">You are not allowed to access this page.</p>
-    </div>
+      <p v-else class="mt-4 text-sm font-mono" style="color: #e85d9a">
+        このページへのアクセス権限がありません。
+      </p>
+    </section>
 
+    <!-- Current state -->
     <div
       v-if="isAdmin"
-      class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-gray-700"
+      class="rounded-xl border p-5"
+      style="background-color: #12121a; border-color: #2a2a40"
     >
-      <p v-if="isLoading">Loading current state...</p>
+      <p class="text-xs font-mono tracking-widest uppercase mb-3" style="color: #3a3a55">
+        現在の状態
+      </p>
+      <div v-if="isLoading" class="py-4 text-center">
+        <div
+          class="inline-block h-4 w-4 rounded-full border-2 animate-spin"
+          style="border-color: #2a2a40; border-top-color: #7c6af7"
+        ></div>
+      </div>
       <template v-else-if="data">
-        <p>Published day: {{ data.publishedDay }}</p>
-        <p>Source day: {{ data.sourceDay }}</p>
-        <p>Mode: {{ data.manual ? "manual" : "automatic" }}</p>
-        <p v-if="data.note">Current note: @{{ data.note.author.username }}</p>
-        <p v-else>No published winner yet.</p>
+        <div class="space-y-2 text-sm font-mono">
+          <p>
+            <span style="color: #3a3a55">掲載日: </span>
+            <span style="color: #ffffff">{{ data.publishedDay ?? "—" }}</span>
+          </p>
+          <p>
+            <span style="color: #3a3a55">集計日: </span>
+            <span style="color: #ffffff">{{ data.sourceDay ?? "—" }}</span>
+          </p>
+          <p>
+            <span style="color: #3a3a55">モード: </span>
+            <span
+              class="rounded-full px-2 py-0.5 text-xs"
+              :style="
+                data.manual
+                  ? 'background-color: #f59e0b20; color: #f59e0b; border: 1px solid #f59e0b40'
+                  : 'background-color: #7c6af720; color: #a99af9; border: 1px solid #7c6af740'
+              "
+            >
+              {{ data.manual ? "手動" : "自動" }}
+            </span>
+          </p>
+          <p v-if="data.note">
+            <span style="color: #3a3a55">現在の投稿: </span>
+            <span style="color: #a99af9">@{{ data.note.author.username }}</span>
+          </p>
+          <p v-else style="color: #3a3a55">まだ winner がいません。</p>
+        </div>
       </template>
     </div>
-  </section>
+  </div>
 </template>
