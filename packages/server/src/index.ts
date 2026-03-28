@@ -106,6 +106,7 @@ async function enrichNotes(
   noteRows: NoteWithUserRow[],
   currentUserId: string | null,
   recommendationDay = getTodayDay(),
+  forceHideContent = false,
 ) {
   if (noteRows.length === 0) return [];
 
@@ -185,7 +186,8 @@ async function enrichNotes(
   }
 
   return noteRows.map((row) => {
-    const canViewContent = currentUserId === row.note.userId || row.note.isUnlocked;
+    const canViewContent =
+      !forceHideContent && (currentUserId === row.note.userId || row.note.isUnlocked);
 
     return {
       id: row.note.id,
@@ -210,8 +212,15 @@ async function enrichSingleNote(
   author: typeof users.$inferSelect,
   currentUserId: string | null,
   recommendationDay = getTodayDay(),
+  forceHideContent = false,
 ) {
-  const result = await enrichNotes(db, [{ note, author }], currentUserId, recommendationDay);
+  const result = await enrichNotes(
+    db,
+    [{ note, author }],
+    currentUserId,
+    recommendationDay,
+    forceHideContent,
+  );
   return result[0];
 }
 
@@ -660,7 +669,7 @@ const topRecommended = os.note.topRecommended.handler(async ({ input, context })
       )})`,
     );
 
-  const enriched = await enrichNotes(ctx.db, rows, currentUserId);
+  const enriched = await enrichNotes(ctx.db, rows, currentUserId, undefined, true);
   const orderMap = new Map(ids.map((id, index) => [id, index]));
 
   return enriched.sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0));

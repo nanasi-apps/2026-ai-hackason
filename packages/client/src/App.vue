@@ -106,8 +106,8 @@ function handleLogout() {
 
     <!-- Footer -->
     <footer class="text-center py-8 text-xs leading-6" style="color: #fff">
-      <span class="block">長く書く。</span>
-      <span class="block">残った言葉が、あなたの全部だ。</span>
+      <span class="block">だらだら書いとけ。</span>
+      <span class="block">最後に残った言葉が、お前そのもんやで。</span>
       <span class="block mt-4">© 2026 nanasi-apps</span>
     </footer>
 
