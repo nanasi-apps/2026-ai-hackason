@@ -156,7 +156,7 @@ const summaryWords = computed(() => {
             :to="`/user/${note.author.username}`"
             class="text-sm font-semibold transition-colors"
             style="color: #a99af9"
-            onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+            onmouseover="this.style.color = &quot;#ffffff&quot;;"
             onmouseout="this.style.color = &quot;#a99af9&quot;;"
           >
             @{{ note.author.username }}
@@ -198,7 +198,7 @@ const summaryWords = computed(() => {
       </div>
 
       <!-- Content -->
-      <p class="text-sm leading-relaxed whitespace-pre-wrap break-words" style="color: #c8c8d8">
+      <p class="text-sm leading-relaxed whitespace-pre-wrap break-words" style="color: #ffffff">
         {{ displayContent }}
       </p>
       <button

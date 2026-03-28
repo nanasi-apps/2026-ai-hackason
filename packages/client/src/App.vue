@@ -13,7 +13,7 @@ function handleLogout() {
 </script>
 
 <template>
-  <div class="min-h-screen" style="background-color: #0a0a0f; color: #e8e8f0">
+  <div class="min-h-screen" style="background-color: #0a0a0f; color: #ffffff">
     <!-- Header -->
     <header
       class="sticky top-0 z-10 border-b"
@@ -43,7 +43,7 @@ function handleLogout() {
             to="/recommend"
             class="text-sm transition-colors"
             style="color: #6b6b8a"
-            onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+            onmouseover="this.style.color = &quot;#ffffff&quot;;"
             onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
           >
             おすすめ
@@ -62,7 +62,7 @@ function handleLogout() {
               @click="handleLogout"
               class="text-sm transition-colors px-3 py-1.5 rounded-full"
               style="color: #6b6b8a"
-              onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+              onmouseover="this.style.color = &quot;#ffffff&quot;;"
               onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
             >
               ログアウト
@@ -73,7 +73,7 @@ function handleLogout() {
               to="/login"
               class="text-sm transition-colors"
               style="color: #6b6b8a"
-              onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+              onmouseover="this.style.color = &quot;#ffffff&quot;;"
               onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
             >
               ログイン

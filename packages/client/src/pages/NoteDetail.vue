@@ -71,7 +71,7 @@ function handleReply() {
             v-model="replyContent"
             rows="3"
             class="w-full resize-none focus:outline-none text-sm leading-relaxed bg-transparent"
-            style="color: #e8e8f0; caret-color: #a99af9"
+            style="color: #ffffff; caret-color: #a99af9"
             placeholder="返信を書く..."
           />
         </div>
@@ -104,7 +104,7 @@ function handleReply() {
           <RouterLink
             to="/login"
             style="color: #a99af9"
-            onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+            onmouseover="this.style.color = &quot;#ffffff&quot;;"
             onmouseout="this.style.color = &quot;#a99af9&quot;;"
             >ログイン</RouterLink
           >

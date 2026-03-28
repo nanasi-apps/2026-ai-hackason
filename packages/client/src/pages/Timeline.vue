@@ -58,7 +58,7 @@ const charColor = () => {
           v-model="content"
           rows="4"
           class="w-full resize-none focus:outline-none text-sm leading-relaxed bg-transparent"
-          style="color: #e8e8f0; caret-color: #a99af9"
+          style="color: #ffffff; caret-color: #a99af9"
           placeholder="何でも書いてください。AIが盛大に誤読します。"
           :maxlength="charLimit"
         />
@@ -96,7 +96,7 @@ const charColor = () => {
           to="/login"
           class="transition-colors"
           style="color: #a99af9"
-          onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+          onmouseover="this.style.color = &quot;#ffffff&quot;;"
           onmouseout="this.style.color = &quot;#a99af9&quot;;"
           >ログイン</RouterLink
         >
