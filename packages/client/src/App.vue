@@ -15,11 +15,11 @@ function handleLogout() {
 </script>
 
 <template>
-  <div class="min-h-screen" style="background-color: #0a0a0f; color: #ffffff">
+  <div class="min-h-screen" style="background-color: #0e0e16; color: #f0f0f8">
     <!-- Header -->
     <header
       class="sticky top-0 z-10 border-b"
-      style="background-color: #0a0a0fea; backdrop-filter: blur(12px); border-color: #2a2a40"
+      style="background-color: #0e0e16ea; backdrop-filter: blur(12px); border-color: #252538"
     >
       <div class="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
         <!-- Logo -->
@@ -28,7 +28,7 @@ function handleLogout() {
             class="text-lg font-bold tracking-widest uppercase"
             style="
               font-family: &quot;Space Mono&quot;, monospace;
-              color: #ffffff;
+              color: #f0f0f8;
               letter-spacing: 0.2em;
             "
           >
@@ -41,9 +41,9 @@ function handleLogout() {
           <RouterLink
             to="/recommend"
             class="text-sm transition-colors"
-            style="color: #fff"
+            style="color: #f0f0f8"
             onmouseover="this.style.color = &quot;#ffffff&quot;;"
-            onmouseout="this.style.color = &quot;#fff&quot;;"
+            onmouseout="this.style.color = &quot;#f0f0f8&quot;;"
           >
             おすすめ
           </RouterLink>
@@ -52,27 +52,27 @@ function handleLogout() {
               v-if="user && ['mattyatea', 'kasukasukun'].includes(user.username)"
               to="/admin/recommend"
               class="text-sm transition-colors"
-              style="color: #fff"
+              style="color: #f0f0f8"
               onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
-              onmouseout="this.style.color = &quot;#fff&quot;;"
+              onmouseout="this.style.color = &quot;#f0f0f8&quot;;"
             >
               管理
             </RouterLink>
             <RouterLink
               :to="`/user/${user?.username}`"
               class="text-sm transition-colors px-3 py-1.5 rounded-full"
-              style="color: #a99af9; border: 1px solid #2a2a40"
-              onmouseover="this.style.borderColor = &quot;#7c6af7&quot;;"
-              onmouseout="this.style.borderColor = &quot;#2a2a40&quot;;"
+              style="color: #b8acfa; border: 1px solid #252538"
+              onmouseover="this.style.borderColor = &quot;#8b7cf8&quot;;"
+              onmouseout="this.style.borderColor = &quot;#252538&quot;;"
             >
               @{{ user?.username }}
             </RouterLink>
             <button
               @click="handleLogout"
               class="text-sm transition-colors px-3 py-1.5 rounded-full"
-              style="color: #fff"
+              style="color: #f0f0f8"
               onmouseover="this.style.color = &quot;#ffffff&quot;;"
-              onmouseout="this.style.color = &quot;#fff&quot;;"
+              onmouseout="this.style.color = &quot;#f0f0f8&quot;;"
             >
               ログアウト
             </button>
@@ -81,16 +81,16 @@ function handleLogout() {
             <RouterLink
               to="/login"
               class="text-sm transition-colors"
-              style="color: #fff"
+              style="color: #f0f0f8"
               onmouseover="this.style.color = &quot;#ffffff&quot;;"
-              onmouseout="this.style.color = &quot;#fff&quot;;"
+              onmouseout="this.style.color = &quot;#f0f0f8&quot;;"
             >
               ログイン
             </RouterLink>
             <RouterLink
               to="/register"
               class="text-sm font-medium px-4 py-1.5 rounded-full transition-all"
-              style="background: linear-gradient(135deg, #7c6af7 0%, #e85d9a 100%); color: white"
+              style="background: linear-gradient(135deg, #8b7cf8 0%, #ec6fac 100%); color: white"
             >
               登録
             </RouterLink>
@@ -105,7 +105,7 @@ function handleLogout() {
     </main>
 
     <!-- Footer -->
-    <footer class="text-center py-8 text-xs leading-6" style="color: #fff">
+    <footer class="text-center py-8 text-xs leading-6" style="color: #f0f0f8">
       <span class="block">だらだら書いとけ。</span>
       <span class="block">最後に残った言葉が、お前そのもんやで。</span>
       <span class="block mt-4">© 2026 nanasi-apps</span>
@@ -122,10 +122,10 @@ function handleLogout() {
           class="pointer-events-auto flex items-center gap-3 rounded-full px-5 py-2.5 text-sm font-mono shadow-lg cursor-pointer"
           :style="
             t.type === 'error'
-              ? 'background-color: #2a1020; border: 1px solid #e85d9a60; color: #e85d9a'
+              ? 'background-color: #2a1020; border: 1px solid #ec6fac60; color: #ec6fac'
               : t.type === 'success'
                 ? 'background-color: #0f2a1a; border: 1px solid #4ade8060; color: #4ade80'
-                : 'background-color: #1a1a2e; border: 1px solid #7c6af760; color: #a99af9'
+                : 'background-color: #1c1c2e; border: 1px solid #8b7cf860; color: #b8acfa'
           "
           @click="dismiss(t.id)"
         >

@@ -35,7 +35,7 @@ async function handleLogin() {
         class="text-3xl font-bold tracking-widest uppercase mb-2"
         style="
           font-family: &quot;Space Mono&quot;, monospace;
-          background: linear-gradient(135deg, #a99af9 0%, #e85d9a 100%);
+          background: linear-gradient(135deg, #b8acfa 0%, #ec6fac 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -43,14 +43,19 @@ async function handleLogin() {
       >
         今北SNS
       </h1>
-      <p class="text-xs font-mono tracking-widest uppercase" style="color: #fff">おかえりなさい</p>
+      <p class="text-xs font-mono tracking-widest uppercase" style="color: #f0f0f8">
+        おかえりなさい
+      </p>
     </div>
 
     <!-- Form card -->
-    <div class="rounded-xl border p-6" style="background-color: #12121a; border-color: #2a2a40">
+    <div class="rounded-xl border p-6" style="background-color: #15151f; border-color: #252538">
       <form @submit.prevent="handleLogin" class="space-y-4">
         <div>
-          <label class="block text-xs font-mono tracking-wider uppercase mb-2" style="color: #fff">
+          <label
+            class="block text-xs font-mono tracking-wider uppercase mb-2"
+            style="color: #f0f0f8"
+          >
             ユーザー名
           </label>
           <input
@@ -58,14 +63,17 @@ async function handleLogin() {
             type="text"
             required
             class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none transition-colors bg-transparent"
-            style="border: 1px solid #2a2a40; color: #ffffff; caret-color: #a99af9"
-            onfocus="this.style.borderColor = &quot;#7c6af7&quot;;"
-            onblur="this.style.borderColor = &quot;#2a2a40&quot;;"
+            style="border: 1px solid #252538; color: #f0f0f8; caret-color: #b8acfa"
+            onfocus="this.style.borderColor = &quot;#8b7cf8&quot;;"
+            onblur="this.style.borderColor = &quot;#252538&quot;;"
             placeholder="ユーザー名"
           />
         </div>
         <div>
-          <label class="block text-xs font-mono tracking-wider uppercase mb-2" style="color: #fff">
+          <label
+            class="block text-xs font-mono tracking-wider uppercase mb-2"
+            style="color: #f0f0f8"
+          >
             パスワード
           </label>
           <input
@@ -73,9 +81,9 @@ async function handleLogin() {
             type="password"
             required
             class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none transition-colors bg-transparent"
-            style="border: 1px solid #2a2a40; color: #ffffff; caret-color: #a99af9"
-            onfocus="this.style.borderColor = &quot;#7c6af7&quot;;"
-            onblur="this.style.borderColor = &quot;#2a2a40&quot;;"
+            style="border: 1px solid #252538; color: #f0f0f8; caret-color: #b8acfa"
+            onfocus="this.style.borderColor = &quot;#8b7cf8&quot;;"
+            onblur="this.style.borderColor = &quot;#252538&quot;;"
             placeholder="パスワード"
           />
         </div>
@@ -83,7 +91,7 @@ async function handleLogin() {
         <p
           v-if="error"
           class="text-xs font-mono py-2 px-3 rounded-lg"
-          style="color: #e85d9a; background-color: #e85d9a15; border: 1px solid #e85d9a30"
+          style="color: #ec6fac; background-color: #ec6fac15; border: 1px solid #ec6fac30"
         >
           {{ error }}
         </p>
@@ -92,21 +100,21 @@ async function handleLogin() {
           type="submit"
           :disabled="loading"
           class="w-full py-2.5 rounded-full text-sm font-medium transition-all disabled:opacity-40 mt-2"
-          style="background: linear-gradient(135deg, #7c6af7 0%, #e85d9a 100%); color: white"
+          style="background: linear-gradient(135deg, #8b7cf8 0%, #ec6fac 100%); color: white"
         >
           {{ loading ? "..." : "ログイン" }}
         </button>
       </form>
     </div>
 
-    <p class="text-center mt-5 text-xs" style="color: #fff">
+    <p class="text-center mt-5 text-xs" style="color: #f0f0f8">
       アカウントをお持ちでない方は
       <RouterLink
         to="/register"
         class="transition-colors"
-        style="color: #a99af9"
-        onmouseover="this.style.color = &quot;#ffffff&quot;;"
-        onmouseout="this.style.color = &quot;#a99af9&quot;;"
+        style="color: #b8acfa"
+        onmouseover="this.style.color = &quot;#f0f0f8&quot;;"
+        onmouseout="this.style.color = &quot;#b8acfa&quot;;"
         >新規登録</RouterLink
       >
     </p>
