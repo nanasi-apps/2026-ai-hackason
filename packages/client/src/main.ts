@@ -1,8 +1,10 @@
-import { createApp } from 'vue'
-import { VueQueryPlugin } from '@tanstack/vue-query'
-import './style.css'
-import App from './App.vue'
+import { createApp } from "vue";
+import { VueQueryPlugin } from "@tanstack/vue-query";
+import { router } from "./router";
+import "./style.css";
+import App from "./App.vue";
 
-const app = createApp(App)
-app.use(VueQueryPlugin)
-app.mount('#app')
+const app = createApp(App);
+app.use(VueQueryPlugin);
+app.use(router);
+app.mount("#app");

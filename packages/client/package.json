@@ -1,7 +1,7 @@
 {
   "name": "@aihackason/client",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,7 +14,8 @@
     "@orpc/contract": "latest",
     "@orpc/tanstack-query": "latest",
     "@tanstack/vue-query": "^5.64.0",
-    "vue": "^3.5.30"
+    "vue": "^3.5.30",
+    "vue-router": "^5.0.4"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",
