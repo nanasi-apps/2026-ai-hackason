@@ -24,12 +24,16 @@ export const NoteSchema = z.object({
   summary: z.string().nullable(),
   createdAt: z.string(),
   userId: z.string(),
+  replyTo: z.string().nullable(),
 });
 
 export type Note = z.infer<typeof NoteSchema>;
 
 export const NoteWithAuthorSchema = NoteSchema.extend({
   author: UserSchema,
+  likeCount: z.number(),
+  replyCount: z.number(),
+  liked: z.boolean(),
 });
 
 export type NoteWithAuthor = z.infer<typeof NoteWithAuthorSchema>;
@@ -66,6 +70,7 @@ const createNote = oc
   .input(
     z.object({
       content: z.string().min(1).max(10000),
+      replyTo: z.string().optional(),
     }),
   )
   .output(NoteWithAuthorSchema);
@@ -95,6 +100,27 @@ const listNotesByUser = oc
   )
   .output(z.array(NoteWithAuthorSchema));
 
+const noteReplies = oc
+  .input(
+    z.object({
+      noteId: z.string(),
+      limit: z.number().int().min(1).max(100).optional().default(20),
+      offset: z.number().int().min(0).optional().default(0),
+    }),
+  )
+  .output(z.array(NoteWithAuthorSchema));
+
+// ========== Like Contract ==========
+
+const LikeResponseSchema = z.object({
+  liked: z.boolean(),
+  likeCount: z.number(),
+});
+
+const likeToggle = oc.input(z.object({ noteId: z.string() })).output(LikeResponseSchema);
+
+const likeStatus = oc.input(z.object({ noteId: z.string() })).output(LikeResponseSchema);
+
 // ========== Contract ==========
 
 export const contract = {
@@ -109,5 +135,10 @@ export const contract = {
     get: getNote,
     delete: deleteNote,
     listByUser: listNotesByUser,
+    replies: noteReplies,
+  },
+  like: {
+    toggle: likeToggle,
+    status: likeStatus,
   },
 };

@@ -33,7 +33,7 @@
 | パス              | 画面                                      |
 | ----------------- | ----------------------------------------- |
 | `/`               | タイムライン（全投稿一覧 + 投稿フォーム） |
-| `/:noteId`        | 投稿の個別表示                            |
+| `/:noteId`        | 投稿の個別表示 + 返信一覧                 |
 | `/login`          | ログイン                                  |
 | `/register`       | アカウント登録                            |
 | `/user/:username` | ユーザーの投稿一覧                        |
@@ -53,13 +53,25 @@
 
 ### notes テーブル
 
-| カラム     | 型                   | 説明                       |
-| ---------- | -------------------- | -------------------------- |
-| id         | TEXT (PK)            | UUID                       |
-| user_id    | TEXT (FK → users.id) | 投稿者                     |
-| content    | TEXT (NOT NULL)      | 原文                       |
-| summary    | TEXT                 | AI生成の3行要約（Phase 2） |
-| created_at | TEXT                 | 投稿日時                   |
+| カラム     | 型                   | 説明                                    |
+| ---------- | -------------------- | --------------------------------------- |
+| id         | TEXT (PK)            | UUID                                    |
+| user_id    | TEXT (FK → users.id) | 投稿者                                  |
+| content    | TEXT (NOT NULL)      | 原文                                    |
+| summary    | TEXT                 | AI生成の3行要約（Phase 2）              |
+| reply_to   | TEXT (FK → notes.id) | 返信先のnote ID（NULLならトップレベル） |
+| created_at | TEXT                 | 投稿日時                                |
+
+### likes テーブル
+
+| カラム     | 型                   | 説明               |
+| ---------- | -------------------- | ------------------ |
+| id         | TEXT (PK)            | UUID               |
+| user_id    | TEXT (FK → users.id) | いいねしたユーザー |
+| note_id    | TEXT (FK → notes.id) | いいねされた投稿   |
+| created_at | TEXT                 | いいね日時         |
+
+> `(user_id, note_id)` にユニーク制約 — 1ユーザー1投稿につき1いいね
 
 ---
 
@@ -75,25 +87,60 @@
 
 ### Note（投稿）
 
-| エンドポイント    | Input                           | Output                       |
-| ----------------- | ------------------------------- | ---------------------------- |
-| `note.create`     | `{ content }` ※認証必須         | `{ note }`                   |
-| `note.list`       | `{ limit?, offset? }`           | `{ notes[] }` (著者情報付き) |
-| `note.get`        | `{ id }`                        | `{ note }` (著者情報付き)    |
-| `note.delete`     | `{ id }` ※自分の投稿のみ        | `{ success }`                |
-| `note.listByUser` | `{ username, limit?, offset? }` | `{ notes[] }`                |
+| エンドポイント    | Input                             | Output                                   |
+| ----------------- | --------------------------------- | ---------------------------------------- |
+| `note.create`     | `{ content, replyTo? }` ※認証必須 | `{ note }` (著者+いいね数+返信数付き)    |
+| `note.list`       | `{ limit?, offset? }`             | `{ notes[] }` (著者+いいね数+返信数付き) |
+| `note.get`        | `{ id }`                          | `{ note }` (著者+いいね数+返信数付き)    |
+| `note.delete`     | `{ id }` ※自分の投稿のみ          | `{ success }`                            |
+| `note.listByUser` | `{ username, limit?, offset? }`   | `{ notes[] }`                            |
+| `note.replies`    | `{ noteId, limit?, offset? }`     | `{ notes[] }` (その投稿への返信一覧)     |
+
+### Like（いいね）
+
+| エンドポイント | Input                  | Output                 |
+| -------------- | ---------------------- | ---------------------- |
+| `like.toggle`  | `{ noteId }` ※認証必須 | `{ liked, likeCount }` |
+| `like.status`  | `{ noteId }` ※認証必須 | `{ liked, likeCount }` |
 
 ---
 
 ## フェーズ分け
 
-### Phase 1: POC（最小限の動くもの） ← 今回のスコープ
+### Phase 1: POC（最小限の動くもの） ✅ 完了
 
 **ゴール: テキスト投稿ができて、タイムラインで見られる**
 
-1. Contract 定義（auth + note）
-2. Server: DB スキーマ・認証・note CRUD
-3. Client: 登録/ログイン、タイムライン、投稿フォーム、`/:noteId` 個別表示
+1. ~~Contract 定義（auth + note）~~
+2. ~~Server: DB スキーマ・認証・note CRUD~~
+3. ~~Client: 登録/ログイン、タイムライン、投稿フォーム、`/:noteId` 個別表示~~
+
+### Phase 1.5: いいね + 返信 ← 今回のスコープ
+
+**ゴール: 投稿にいいね・返信ができる**
+
+#### Contract 追加
+
+1. `NoteWithAuthorSchema` を拡張 → `likeCount`, `replyCount`, `liked` (ログインユーザーがいいね済みか) を追加
+2. `note.create` の input に `replyTo?` を追加
+3. `note.replies` エンドポイント追加
+4. `like.toggle` / `like.status` エンドポイント追加
+
+#### Server
+
+1. DB: `likes` テーブル追加、`notes` に `reply_to` カラム追加
+2. マイグレーション生成・適用
+3. `like.toggle` / `like.status` 実装
+4. `note.create` に返信対応
+5. `note.replies` 実装
+6. 既存の note 系エンドポイントに likeCount, replyCount, liked を付与
+
+#### Client
+
+1. NoteCard に いいねボタン（ハート）+ いいね数を追加
+2. NoteCard に 返信数の表示を追加
+3. `/:noteId` ページに返信一覧 + 返信フォームを追加
+4. 返信投稿 UI
 
 ### Phase 2: AI要約（後日）
 
@@ -108,4 +155,5 @@
 - パスワードは bcrypt でハッシュ化して保存
 - JWT トークンをAuthorizationヘッダーで送信
 - 投稿の削除は本人のみ
+- いいねは認証必須、1ユーザー1投稿1いいね
 - XSS対策: Vueのデフォルトエスケープを活用

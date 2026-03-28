@@ -1,4 +1,4 @@
-import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 
 export const users = sqliteTable("users", {
@@ -17,7 +17,25 @@ export const notes = sqliteTable("notes", {
     .references(() => users.id),
   content: text("content").notNull(),
   summary: text("summary"),
+  replyTo: text("reply_to").references(() => notes.id),
   createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),
 });
+
+export const likes = sqliteTable(
+  "likes",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    noteId: text("note_id")
+      .notNull()
+      .references(() => notes.id),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [uniqueIndex("likes_user_note_unique").on(table.userId, table.noteId)],
+);
