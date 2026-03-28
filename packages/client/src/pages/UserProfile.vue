@@ -23,20 +23,17 @@ const { data: notes, isLoading } = useQuery(
         </div>
         <div>
           <h1 class="text-lg font-bold" style="color: #ffffff">@{{ username }}</h1>
-          <p class="text-xs font-mono mt-0.5" style="color: #6b6b8a">
+          <p class="text-xs font-mono mt-0.5" style="color: #fff">
             {{ notes ? notes.length : "..." }} 件の投稿
           </p>
         </div>
       </div>
-      <div
-        class="h-px"
-        style="background: linear-gradient(90deg, #7c6af7 0%, #e85d9a 40%, transparent 100%)"
-      ></div>
+      <div class="h-px" style="background-color: #2a2a40"></div>
     </div>
 
     <!-- Posts -->
     <div class="flex items-center gap-3 mb-4">
-      <span class="text-xs font-mono tracking-widest uppercase" style="color: #6b6b8a">投稿</span>
+      <span class="text-xs font-mono tracking-widest uppercase" style="color: #fff">投稿</span>
       <div class="flex-1 h-px" style="background-color: #2a2a40"></div>
     </div>
 
@@ -50,7 +47,7 @@ const { data: notes, isLoading } = useQuery(
       <NoteCard v-for="note in notes" :key="note.id" :note="note" />
     </div>
     <div v-else class="text-center py-16">
-      <p class="text-sm font-mono" style="color: #6b6b8a">まだ投稿がありません</p>
+      <p class="text-sm font-mono" style="color: #fff">まだ投稿がありません</p>
     </div>
   </div>
 </template>

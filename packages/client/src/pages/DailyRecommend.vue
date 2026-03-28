@@ -6,6 +6,8 @@ import NoteCard from "../components/NoteCard.vue";
 
 const { data, isLoading, error } = useQuery(orpc.note.dailyWinner.queryOptions());
 
+const todayTopNotes = useQuery(orpc.note.topRecommended.queryOptions({ input: { limit: 3 } }));
+
 const formattedPublishedDay = computed(() => {
   if (!data.value?.publishedDay) return "";
   return new Date(`${data.value.publishedDay}T00:00:00`).toLocaleDateString("ja-JP");
@@ -31,10 +33,10 @@ const formattedSourceDay = computed(() => {
         Daily Recommend
       </p>
       <h1 class="mt-2 text-2xl font-semibold leading-tight" style="color: #ffffff">
-        昨日いちばん推された投稿
+        今日のトップ3と昨日のTop 3
       </h1>
       <p class="mt-3 text-sm leading-6" style="color: #6b6b8a">
-        毎日の推薦が集計され、トップの投稿が翌日ここに表示されます。3語の誤読のみ公開。
+        今日のランキングはリアルタイム更新。翌日になると、前日の上位3投稿の本文がここで開きます。
       </p>
       <div v-if="formattedPublishedDay" class="mt-4 flex flex-wrap items-center gap-3">
         <span class="text-xs font-mono" style="color: #f59e0b">
@@ -66,25 +68,54 @@ const formattedSourceDay = computed(() => {
       <p class="text-sm font-mono" style="color: #e85d9a">{{ error.message }}</p>
     </div>
 
-    <!-- Winner card -->
-    <div v-else-if="data?.note" class="mb-4">
-      <div class="flex items-center gap-3 mb-4">
+    <div class="mb-8">
+      <div class="mb-4 flex items-center gap-3">
         <span class="text-xs font-mono tracking-widest uppercase" style="color: #f59e0b">
-          winner
+          今日のトップ3
         </span>
         <div class="flex-1 h-px" style="background-color: #2a2a40"></div>
       </div>
-      <NoteCard :note="data.note" :full="true" />
+
+      <div v-if="todayTopNotes.data.value && todayTopNotes.data.value.length > 0" class="space-y-3">
+        <NoteCard v-for="note in todayTopNotes.data.value" :key="`today-${note.id}`" :note="note" />
+      </div>
+      <div
+        v-else
+        class="rounded-xl border border-dashed p-10 text-center"
+        style="border-color: #2a2a40"
+      >
+        <p class="text-sm font-mono" style="color: #3a3a55">
+          まだ今日のトップ3はありません。推薦が入るとここに並びます。
+        </p>
+      </div>
+    </div>
+
+    <!-- Winner card -->
+    <div v-if="!isLoading && !error && data?.notes?.length" class="mb-4">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-xs font-mono tracking-widest uppercase" style="color: #f59e0b">
+          昨日のTop 3
+        </span>
+        <div class="flex-1 h-px" style="background-color: #2a2a40"></div>
+      </div>
+      <div class="space-y-3">
+        <NoteCard
+          v-for="note in data.notes"
+          :key="`yesterday-${note.id}`"
+          :note="note"
+          :full="true"
+        />
+      </div>
     </div>
 
     <!-- Empty -->
     <div
-      v-else
+      v-else-if="!isLoading && !error"
       class="rounded-xl border border-dashed p-10 text-center"
       style="border-color: #2a2a40"
     >
       <p class="text-sm font-mono" style="color: #3a3a55">
-        まだ winner がいません。推薦が集まると翌日ここに表示されます。
+        まだ昨日のTop 3はありません。今日の推薦結果が翌日にここへ反映されます。
       </p>
     </div>
   </div>

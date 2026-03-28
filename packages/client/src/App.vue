@@ -32,7 +32,7 @@ function handleLogout() {
               letter-spacing: 0.2em;
             "
           >
-            今北産業SNS
+            今北SNS
           </span>
         </RouterLink>
 
@@ -41,9 +41,9 @@ function handleLogout() {
           <RouterLink
             to="/recommend"
             class="text-sm transition-colors"
-            style="color: #6b6b8a"
+            style="color: #fff"
             onmouseover="this.style.color = &quot;#ffffff&quot;;"
-            onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
+            onmouseout="this.style.color = &quot;#fff&quot;;"
           >
             おすすめ
           </RouterLink>
@@ -52,9 +52,9 @@ function handleLogout() {
               v-if="user && ['mattyatea', 'kasukasukun'].includes(user.username)"
               to="/admin/recommend"
               class="text-sm transition-colors"
-              style="color: #6b6b8a"
+              style="color: #fff"
               onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
-              onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
+              onmouseout="this.style.color = &quot;#fff&quot;;"
             >
               管理
             </RouterLink>
@@ -70,9 +70,9 @@ function handleLogout() {
             <button
               @click="handleLogout"
               class="text-sm transition-colors px-3 py-1.5 rounded-full"
-              style="color: #6b6b8a"
+              style="color: #fff"
               onmouseover="this.style.color = &quot;#ffffff&quot;;"
-              onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
+              onmouseout="this.style.color = &quot;#fff&quot;;"
             >
               ログアウト
             </button>
@@ -81,9 +81,9 @@ function handleLogout() {
             <RouterLink
               to="/login"
               class="text-sm transition-colors"
-              style="color: #6b6b8a"
+              style="color: #fff"
               onmouseover="this.style.color = &quot;#ffffff&quot;;"
-              onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
+              onmouseout="this.style.color = &quot;#fff&quot;;"
             >
               ログイン
             </RouterLink>
@@ -105,10 +105,10 @@ function handleLogout() {
     </main>
 
     <!-- Footer -->
-    <footer class="text-center py-8 text-xs leading-6" style="color: #6b6b8a">
+    <footer class="text-center py-8 text-xs leading-6" style="color: #fff">
       <span class="block">長く書く。</span>
-      <span class="block">AIが 3 行に削る。</span>
       <span class="block">残った言葉が、あなたの全部だ。</span>
+      <span class="block mt-4">© 2026 nanasi-apps</span>
     </footer>
 
     <!-- Toast container -->

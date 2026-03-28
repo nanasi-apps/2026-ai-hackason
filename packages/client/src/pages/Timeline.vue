@@ -45,7 +45,7 @@ const charLimit = 5000;
 const charColor = () => {
   if (content.value.length > charLimit * 0.9) return "#e85d9a";
   if (content.value.length > charLimit * 0.7) return "#f59e0b";
-  return "#6b6b8a";
+  return "#fff";
 };
 </script>
 
@@ -57,15 +57,8 @@ const charColor = () => {
       style="background-color: #12121a; border-color: #2a2a40"
     >
       <div class="px-4 pt-4 pb-3">
-        <div
-          v-if="myRecommendations"
-          class="mb-3 flex items-center justify-between text-xs font-mono"
-          style="color: #f59e0b"
-        >
-          <span>今日の残り推薦 {{ myRecommendations.remainingCount }}</span>
-          <RouterLink to="/recommend" class="transition-colors" style="color: #6b6b8a">
-            Daily Recommend
-          </RouterLink>
+        <div v-if="myRecommendations" class="mb-3 text-xs font-mono" style="color: #f59e0b">
+          今日の残り推薦 {{ myRecommendations.remainingCount }}
         </div>
         <textarea
           v-model="content"
@@ -103,7 +96,7 @@ const charColor = () => {
       class="mb-8 rounded-xl border p-6 text-center"
       style="background-color: #12121a; border-color: #2a2a40"
     >
-      <p class="mb-3 text-sm" style="color: #6b6b8a">
+      <p class="mb-3 text-sm" style="color: #fff">
         投稿するには
         <RouterLink
           to="/login"
@@ -119,11 +112,11 @@ const charColor = () => {
         <RouterLink
           to="/login"
           class="rounded-full px-4 py-1.5 text-sm transition-colors"
-          style="border: 1px solid #2a2a40; color: #6b6b8a"
+          style="border: 1px solid #2a2a40; color: #fff"
           onmouseover="this.style.borderColor = &quot;#7c6af7&quot;;
           this.style.color = &quot;#a99af9&quot;;"
           onmouseout="this.style.borderColor = &quot;#2a2a40&quot;;
-          this.style.color = &quot;#6b6b8a&quot;;"
+          this.style.color = &quot;#fff&quot;;"
           >ログイン</RouterLink
         >
         <RouterLink
@@ -133,13 +126,6 @@ const charColor = () => {
           >新規登録</RouterLink
         >
       </div>
-    </div>
-
-    <div class="mb-4 flex items-center gap-3">
-      <span class="text-xs font-mono tracking-widest uppercase" style="color: #6b6b8a"
-        >タイムライン</span
-      >
-      <div class="h-px flex-1" style="background-color: #2a2a40"></div>
     </div>
 
     <div v-if="isLoading" class="py-12 text-center">
@@ -152,7 +138,7 @@ const charColor = () => {
       <NoteCard v-for="note in notes" :key="note.id" :note="note" />
     </div>
     <div v-else class="py-16 text-center">
-      <p class="text-sm font-mono" style="color: #6b6b8a">まだ投稿がありません</p>
+      <p class="text-sm font-mono" style="color: #fff">まだ投稿がありません</p>
     </div>
   </div>
 </template>

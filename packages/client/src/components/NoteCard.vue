@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { RouterLink } from "vue-router";
+import { RouterLink, useRouter } from "vue-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { client, orpc } from "../lib/orpc";
 import { useAuth } from "../composables/useAuth";
@@ -20,6 +20,7 @@ const props = withDefaults(
 const { user, isLoggedIn } = useAuth();
 const { show: showToast } = useToast();
 const queryClient = useQueryClient();
+const router = useRouter();
 
 const isOwner = computed(() => user.value?.id === props.note.userId);
 const summaryLines = computed(() => {
@@ -95,6 +96,19 @@ function handleRecommend() {
   recommendMutation.mutate();
 }
 
+function openNote() {
+  if (props.full) return;
+  router.push(`/${props.note.id}`);
+}
+
+function handleCardKeydown(event: KeyboardEvent) {
+  if (props.full) return;
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    openNote();
+  }
+}
+
 function formatDate(dateStr: string) {
   const d = new Date(dateStr + "Z");
   return d.toLocaleString("ja-JP", {
@@ -110,6 +124,15 @@ function formatDate(dateStr: string) {
   <article
     class="overflow-hidden rounded-xl border transition-all duration-200 animate-fade-up"
     style="background-color: #12121a; border-color: #2a2a40"
+    :class="
+      props.full
+        ? ''
+        : 'cursor-pointer hover:border-[#3a3a55] focus:outline-none focus:ring-1 focus:ring-[#7c6af7]'
+    "
+    :tabindex="props.full ? undefined : 0"
+    :role="props.full ? undefined : 'link'"
+    @click="openNote"
+    @keydown="handleCardKeydown"
   >
     <!-- Author row -->
     <div class="px-5 pt-4 pb-3 flex items-center justify-between gap-3">
@@ -126,19 +149,21 @@ function formatDate(dateStr: string) {
           style="color: #a99af9"
           onmouseover="this.style.color = &quot;#ffffff&quot;;"
           onmouseout="this.style.color = &quot;#a99af9&quot;;"
+          @click.stop
         >
           @{{ note.author.username }}
         </RouterLink>
       </div>
 
       <div class="flex items-center gap-2">
-        <div v-if="note.replyTo" class="text-xs" style="color: #6b6b8a">
+        <div v-if="note.replyTo" class="text-xs" style="color: #fff">
           <RouterLink
             :to="`/${note.replyTo}`"
             class="transition-colors"
-            style="color: #6b6b8a"
-            onmouseover="this.style.color = &quot;#6b6b8a&quot;;"
-            onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
+            style="color: #fff"
+            onmouseover="this.style.color = &quot;#fff&quot;;"
+            onmouseout="this.style.color = &quot;#fff&quot;;"
+            @click.stop
           >
             ↩ 返信
           </RouterLink>
@@ -146,35 +171,29 @@ function formatDate(dateStr: string) {
         <RouterLink
           :to="`/${note.id}`"
           class="text-xs font-mono transition-colors"
-          style="color: #6b6b8a"
-          onmouseover="this.style.color = &quot;#6b6b8a&quot;;"
-          onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
+          style="color: #fff"
+          onmouseover="this.style.color = &quot;#fff&quot;;"
+          onmouseout="this.style.color = &quot;#fff&quot;;"
+          @click.stop
         >
           {{ formatDate(note.createdAt) }}
         </RouterLink>
         <button
           v-if="isOwner"
+          type="button"
           @click="handleDelete"
           class="text-xs transition-colors"
-          style="color: #6b6b8a"
+          style="color: #fff"
           onmouseover="this.style.color = &quot;#e85d9a&quot;;"
-          onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
+          onmouseout="this.style.color = &quot;#fff&quot;;"
+          @click.stop
         >
           ×
         </button>
       </div>
     </div>
 
-    <!-- 3-line AI summary banner -->
     <div class="border-b border-t px-5 pt-3 pb-3" style="border-color: #2a2a4080">
-      <div class="mb-2 flex items-center gap-2">
-        <span
-          class="rounded-full px-2 py-0.5 text-[10px] font-mono tracking-[0.24em] uppercase"
-          style="color: #7c6af7; background-color: #7c6af720; border: 1px solid #7c6af740"
-        >
-          AI 3行
-        </span>
-      </div>
       <div class="flex flex-col gap-0.5">
         <span
           v-for="(line, i) in summaryLines"
@@ -192,21 +211,23 @@ function formatDate(dateStr: string) {
       </div>
     </div>
 
-    <div v-if="props.full" class="px-5 py-4">
-      <p class="text-sm leading-6" style="color: #6b6b8a">
-        原文は返さず、MISREADER では AI の 3 行誤読だけを表示します。
+    <div v-if="props.full && note.content" class="px-5 py-4">
+      <p class="whitespace-pre-wrap text-sm leading-7" style="color: #fff">
+        {{ note.content }}
       </p>
     </div>
 
     <!-- Action bar -->
     <div class="flex items-center gap-6 border-t px-5 py-3" style="border-color: #2a2a4060">
       <button
+        type="button"
         @click="handleLike"
         :disabled="!isLoggedIn"
         class="flex items-center gap-2 transition-all duration-150 px-2 py-1.5 rounded-lg"
-        :style="localLiked ? 'color: #e85d9a;' : 'color: #6b6b8a;'"
+        :style="localLiked ? 'color: #e85d9a;' : 'color: #fff;'"
         :onmouseover="isLoggedIn ? 'this.style.color=\'#e85d9a\'' : ''"
-        :onmouseout="localLiked ? 'this.style.color=\'#e85d9a\'' : 'this.style.color=\'#6b6b8a\''"
+        :onmouseout="localLiked ? 'this.style.color=\'#e85d9a\'' : 'this.style.color=\'#fff\''"
+        @click.stop
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -228,9 +249,10 @@ function formatDate(dateStr: string) {
       <RouterLink
         :to="`/${note.id}`"
         class="flex items-center gap-2 transition-colors px-2 py-1.5 rounded-lg"
-        style="color: #6b6b8a"
+        style="color: #fff"
         onmouseover="this.style.color = &quot;#7c6af7&quot;;"
-        onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
+        onmouseout="this.style.color = &quot;#fff&quot;;"
+        @click.stop
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -250,20 +272,22 @@ function formatDate(dateStr: string) {
       </RouterLink>
 
       <button
+        type="button"
         @click="handleRecommend"
         :disabled="
           !isLoggedIn || remainingRecommendationCount <= 0 || recommendMutation.isPending.value
         "
         class="flex items-center gap-2 transition-all duration-150 disabled:opacity-40 px-2 py-1.5 rounded-lg"
-        :style="recommendationCountForNote > 0 ? 'color: #f59e0b;' : 'color: #6b6b8a;'"
+        :style="recommendationCountForNote > 0 ? 'color: #f59e0b;' : 'color: #fff;'"
         :onmouseover="
           isLoggedIn && remainingRecommendationCount > 0 ? 'this.style.color=\'#f59e0b\'' : ''
         "
         :onmouseout="
           recommendationCountForNote > 0
             ? 'this.style.color=\'#f59e0b\''
-            : 'this.style.color=\'#6b6b8a\''
+            : 'this.style.color=\'#fff\''
         "
+        @click.stop
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

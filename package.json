@@ -2,6 +2,7 @@
   "name": "aihackason",
   "version": "1.0.0",
   "private": true,
+  "license": "AGPL-3.0-or-later",
   "scripts": {
     "dev:server": "pnpm -F @aihackason/server dev",
     "dev:client": "pnpm -F @aihackason/client dev",

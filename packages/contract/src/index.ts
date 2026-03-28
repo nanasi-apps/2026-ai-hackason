@@ -20,6 +20,7 @@ export type AuthResponse = z.infer<typeof AuthResponseSchema>;
 
 export const NoteSchema = z.object({
   id: z.string(),
+  content: z.string().nullable(),
   summary: z.string().nullable(),
   createdAt: z.string(),
   userId: z.string(),
@@ -59,7 +60,7 @@ export type Recommendation = z.infer<typeof RecommendationSchema>;
 export const DailyWinnerSchema = z.object({
   publishedDay: z.string(),
   sourceDay: z.string(),
-  note: NoteWithAuthorSchema.nullable(),
+  notes: z.array(NoteWithAuthorSchema),
   manual: z.boolean(),
 });
 

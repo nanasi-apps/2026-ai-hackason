@@ -41,21 +41,16 @@ async function handleLogin() {
           background-clip: text;
         "
       >
-        今北産業SNS
+        今北SNS
       </h1>
-      <p class="text-xs font-mono tracking-widest uppercase" style="color: #6b6b8a">
-        おかえりなさい
-      </p>
+      <p class="text-xs font-mono tracking-widest uppercase" style="color: #fff">おかえりなさい</p>
     </div>
 
     <!-- Form card -->
     <div class="rounded-xl border p-6" style="background-color: #12121a; border-color: #2a2a40">
       <form @submit.prevent="handleLogin" class="space-y-4">
         <div>
-          <label
-            class="block text-xs font-mono tracking-wider uppercase mb-2"
-            style="color: #6b6b8a"
-          >
+          <label class="block text-xs font-mono tracking-wider uppercase mb-2" style="color: #fff">
             ユーザー名
           </label>
           <input
@@ -70,10 +65,7 @@ async function handleLogin() {
           />
         </div>
         <div>
-          <label
-            class="block text-xs font-mono tracking-wider uppercase mb-2"
-            style="color: #6b6b8a"
-          >
+          <label class="block text-xs font-mono tracking-wider uppercase mb-2" style="color: #fff">
             パスワード
           </label>
           <input
@@ -107,7 +99,7 @@ async function handleLogin() {
       </form>
     </div>
 
-    <p class="text-center mt-5 text-xs" style="color: #6b6b8a">
+    <p class="text-center mt-5 text-xs" style="color: #fff">
       アカウントをお持ちでない方は
       <RouterLink
         to="/register"

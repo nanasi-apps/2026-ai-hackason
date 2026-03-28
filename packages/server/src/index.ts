@@ -1,4 +1,4 @@
-import { implement } from "@orpc/server";
+import { implement, ORPCError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { CORSPlugin } from "@orpc/server/plugins";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
@@ -34,6 +34,11 @@ type NoteWithUserRow = {
   author: typeof users.$inferSelect;
 };
 
+type DailyRecommendedNoteRow = {
+  noteId: string;
+  rank: number;
+};
+
 const RECOMMEND_LIMIT = 3;
 const ADMIN_USERNAMES = new Set(["mattyatea", "kasukasukun"]);
 
@@ -67,12 +72,19 @@ async function verifyToken(token: string, secret: Uint8Array): Promise<string | 
 async function requireAuth(context: Context, headers: Headers): Promise<AuthContext> {
   const authHeader = headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
-    throw new Error("Unauthorized");
+    throw new ORPCError("UNAUTHORIZED", { message: "Unauthorized" });
   }
   const token = authHeader.slice(7);
   const userId = await verifyToken(token, context.jwtSecret);
   if (!userId) {
-    throw new Error("Invalid token");
+    throw new ORPCError("UNAUTHORIZED", { message: "Invalid token" });
+  }
+  // Verify user still exists in DB (guards against stale tokens after DB reset)
+  const [user] = await context.db.select({ id: users.id }).from(users).where(eq(users.id, userId));
+  if (!user) {
+    throw new ORPCError("UNAUTHORIZED", {
+      message: "User no longer exists. Please register again.",
+    });
   }
   return { ...context, userId };
 }
@@ -93,6 +105,7 @@ async function enrichNotes(
   db: DrizzleD1Database,
   noteRows: NoteWithUserRow[],
   currentUserId: string | null,
+  recommendationDay = getTodayDay(),
 ) {
   if (noteRows.length === 0) return [];
 
@@ -144,7 +157,7 @@ async function enrichNotes(
           noteIds.map((id) => sql`${id}`),
           sql`, `,
         )})`,
-        sql`date(${recommendations.createdAt}) = date('now')`,
+        sql`date(${recommendations.createdAt}) = ${recommendationDay}`,
       ),
     )
     .groupBy(recommendations.noteId);
@@ -172,8 +185,11 @@ async function enrichNotes(
   }
 
   return noteRows.map((row) => {
+    const canViewContent = currentUserId === row.note.userId || row.note.isUnlocked;
+
     return {
       id: row.note.id,
+      content: canViewContent ? row.note.content : null,
       summary: row.note.summary ?? null,
       createdAt: row.note.createdAt,
       userId: row.note.userId,
@@ -193,8 +209,9 @@ async function enrichSingleNote(
   note: typeof notes.$inferSelect,
   author: typeof users.$inferSelect,
   currentUserId: string | null,
+  recommendationDay = getTodayDay(),
 ) {
-  const result = await enrichNotes(db, [{ note, author }], currentUserId);
+  const result = await enrichNotes(db, [{ note, author }], currentUserId, recommendationDay);
   return result[0];
 }
 
@@ -247,18 +264,18 @@ function getPreviousDay(day: string) {
 async function requireAdmin(context: AuthContext) {
   const [user] = await context.db.select().from(users).where(eq(users.id, context.userId));
   if (!user || !ADMIN_USERNAMES.has(user.username)) {
-    throw new Error("Forbidden");
+    throw new ORPCError("FORBIDDEN", { message: "Forbidden" });
   }
 
   return user;
 }
 
-async function getDailyWinnerNote(
+async function getTopRecommendedNoteIdsForDay(
   db: DrizzleD1Database,
-  currentUserId: string | null,
   day: string,
-) {
-  const winners = await db
+  limit: number,
+): Promise<DailyRecommendedNoteRow[]> {
+  const rows = await db
     .select({
       noteId: recommendations.noteId,
       count: count(),
@@ -268,29 +285,47 @@ async function getDailyWinnerNote(
     .where(sql`date(${recommendations.createdAt}) = ${day}`)
     .groupBy(recommendations.noteId)
     .orderBy(desc(count()), desc(sql`max(${recommendations.createdAt})`))
-    .limit(1);
+    .limit(limit);
 
-  const winner = winners[0];
-  if (!winner) {
-    return null;
+  return rows.map((row, index) => ({
+    noteId: row.noteId,
+    rank: index + 1,
+  }));
+}
+
+async function getRecommendedNotesForDay(
+  db: DrizzleD1Database,
+  currentUserId: string | null,
+  day: string,
+  limit: number,
+) {
+  const rankedIds = await getTopRecommendedNoteIdsForDay(db, day, limit);
+
+  if (rankedIds.length === 0) {
+    return [];
   }
 
+  const ids = rankedIds.map((item) => item.noteId);
   const rows = await db
     .select({ note: notes, author: users })
     .from(notes)
     .innerJoin(users, eq(notes.userId, users.id))
-    .where(eq(notes.id, winner.noteId));
+    .where(
+      sql`${notes.id} IN (${sql.join(
+        ids.map((id) => sql`${id}`),
+        sql`, `,
+      )})`,
+    );
 
-  if (rows.length === 0) {
-    return null;
-  }
+  const enriched = await enrichNotes(db, rows, currentUserId, day);
+  const orderMap = new Map(rankedIds.map((item, index) => [item.noteId, index]));
 
-  const enriched = await enrichSingleNote(db, rows[0].note, rows[0].author, currentUserId);
-
-  return {
-    ...enriched,
-    recommended: true,
-  };
+  return enriched
+    .map((note) => ({
+      ...note,
+      recommended: true,
+    }))
+    .sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0));
 }
 
 async function publishDailyRecommendForDay(
@@ -307,18 +342,19 @@ async function publishDailyRecommendForDay(
       .where(eq(dailyRecommendState.publishedDay, publishedDay));
 
     if (existing) {
-      const note = existing.noteId
-        ? await getDailyWinnerNote(db, currentUserId, existing.sourceDay)
-        : null;
+      const notes = existing.noteId
+        ? await getRecommendedNotesForDay(db, currentUserId, existing.sourceDay, 3)
+        : [];
       return {
         publishedDay: existing.publishedDay,
         sourceDay: existing.sourceDay,
-        note,
+        notes,
         manual: existing.manual,
       };
     }
 
-    const winner = await getDailyWinnerNote(db, currentUserId, sourceDay);
+    const recommendedNotes = await getRecommendedNotesForDay(db, currentUserId, sourceDay, 3);
+    const winner = recommendedNotes[0] ?? null;
 
     await db.insert(dailyRecommendState).values({
       id: crypto.randomUUID(),
@@ -328,30 +364,44 @@ async function publishDailyRecommendForDay(
       manual,
     });
 
-    if (winner) {
-      await db.update(notes).set({ isUnlocked: true }).where(eq(notes.id, winner.id));
-      await refreshNoteUnlockState(db, winner.id);
+    if (recommendedNotes.length > 0) {
+      await db
+        .update(notes)
+        .set({ isUnlocked: true })
+        .where(
+          sql`${notes.id} IN (${sql.join(
+            recommendedNotes.map((note) => sql`${note.id}`),
+            sql`, `,
+          )})`,
+        );
     }
 
     return {
       publishedDay,
       sourceDay,
-      note: winner,
+      notes: recommendedNotes,
       manual,
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes("no such table: daily_recommend_state")) {
-      const winner = await getDailyWinnerNote(db, currentUserId, sourceDay);
+      const recommendedNotes = await getRecommendedNotesForDay(db, currentUserId, sourceDay, 3);
 
-      if (winner) {
-        await db.update(notes).set({ isUnlocked: true }).where(eq(notes.id, winner.id));
-        await refreshNoteUnlockState(db, winner.id);
+      if (recommendedNotes.length > 0) {
+        await db
+          .update(notes)
+          .set({ isUnlocked: true })
+          .where(
+            sql`${notes.id} IN (${sql.join(
+              recommendedNotes.map((note) => sql`${note.id}`),
+              sql`, `,
+            )})`,
+          );
       }
 
       return {
         publishedDay,
         sourceDay,
-        note: winner,
+        notes: recommendedNotes,
         manual,
       };
     }
@@ -370,7 +420,7 @@ const register = os.auth.register.handler(async ({ input, context }) => {
   const ctx = context as Context;
   const existing = await ctx.db.select().from(users).where(eq(users.username, input.username));
   if (existing.length > 0) {
-    throw new Error("Username already taken");
+    throw new ORPCError("BAD_REQUEST", { message: "Username already taken" });
   }
 
   const id = crypto.randomUUID();
@@ -393,12 +443,12 @@ const login = os.auth.login.handler(async ({ input, context }) => {
   const ctx = context as Context;
   const [user] = await ctx.db.select().from(users).where(eq(users.username, input.username));
   if (!user) {
-    throw new Error("Invalid username or password");
+    throw new ORPCError("UNAUTHORIZED", { message: "Invalid username or password" });
   }
 
   const valid = compareSync(input.password, user.passwordHash);
   if (!valid) {
-    throw new Error("Invalid username or password");
+    throw new ORPCError("UNAUTHORIZED", { message: "Invalid username or password" });
   }
 
   const token = await createToken(user.id, ctx.jwtSecret);
@@ -415,7 +465,7 @@ const meHandler = os.auth.me.handler(async ({ context }) => {
 
   const [user] = await auth.db.select().from(users).where(eq(users.id, auth.userId));
   if (!user) {
-    throw new Error("User not found");
+    throw new ORPCError("NOT_FOUND", { message: "User not found" });
   }
 
   return { id: user.id, username: user.username, createdAt: user.createdAt };
@@ -436,34 +486,50 @@ const createNote = os.note.create.handler(async ({ input, context }) => {
   if (input.replyTo) {
     const [parentNote] = await auth.db.select().from(notes).where(eq(notes.id, input.replyTo));
     if (!parentNote) {
-      throw new Error("Reply target note not found");
+      throw new ORPCError("NOT_FOUND", { message: "Reply target note not found" });
     }
   }
 
-  const id = crypto.randomUUID();
-  const generatedSummary = await summarizeIntoThreeWords(auth.ai, input.content);
-  const insertedNotes = await auth.db
-    .insert(notes)
-    .values({
-      id,
-      userId: auth.userId,
-      content: input.content,
-      summary: generatedSummary.summary,
-      replyTo: input.replyTo ?? null,
-      recommendCount: 0,
-      isUnlocked: false,
-    })
-    .returning();
-
-  if (!Array.isArray(insertedNotes) || insertedNotes.length === 0) {
-    throw new Error("Failed to create note");
+  // Generate AI summary – never let this fail the request
+  let summaryText: string | null = null;
+  try {
+    const generatedSummary = await summarizeIntoThreeWords(auth.ai, input.content);
+    summaryText = generatedSummary.summary;
+  } catch (err) {
+    console.error("[createNote] summarize failed, continuing without summary:", err);
   }
 
-  const [note] = insertedNotes;
+  const id = crypto.randomUUID();
 
-  const [author] = await auth.db.select().from(users).where(eq(users.id, auth.userId));
+  try {
+    const insertedNotes = await auth.db
+      .insert(notes)
+      .values({
+        id,
+        userId: auth.userId,
+        content: input.content,
+        summary: summaryText,
+        replyTo: input.replyTo ?? null,
+        recommendCount: 0,
+        isUnlocked: false,
+      })
+      .returning();
 
-  return enrichSingleNote(auth.db, note, author, auth.userId);
+    if (!Array.isArray(insertedNotes) || insertedNotes.length === 0) {
+      throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Failed to create note" });
+    }
+
+    const note = insertedNotes[0]!;
+    const [author] = await auth.db.select().from(users).where(eq(users.id, auth.userId));
+    if (!author) {
+      throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Author not found" });
+    }
+
+    return enrichSingleNote(auth.db, note, author, auth.userId);
+  } catch (err) {
+    console.error("[createNote] DB/enrich error:", err);
+    throw err;
+  }
 });
 
 const listNotes = os.note.list.handler(async ({ input, context }) => {
@@ -493,7 +559,7 @@ const getNote = os.note.get.handler(async ({ input, context }) => {
     .where(eq(notes.id, input.id));
 
   if (rows.length === 0) {
-    throw new Error("Note not found");
+    throw new ORPCError("NOT_FOUND", { message: "Note not found" });
   }
 
   const row = rows[0];
@@ -506,10 +572,10 @@ const deleteNote = os.note.delete.handler(async ({ input, context }) => {
 
   const [note] = await auth.db.select().from(notes).where(eq(notes.id, input.id));
   if (!note) {
-    throw new Error("Note not found");
+    throw new ORPCError("NOT_FOUND", { message: "Note not found" });
   }
   if (note.userId !== auth.userId) {
-    throw new Error("Forbidden");
+    throw new ORPCError("FORBIDDEN", { message: "Forbidden" });
   }
 
   // Delete associated likes first
@@ -525,7 +591,7 @@ const listNotesByUser = os.note.listByUser.handler(async ({ input, context }) =>
 
   const [user] = await ctx.db.select().from(users).where(eq(users.username, input.username));
   if (!user) {
-    throw new Error("User not found");
+    throw new ORPCError("NOT_FOUND", { message: "User not found" });
   }
 
   const rows = await ctx.db
@@ -547,7 +613,7 @@ const noteReplies = os.note.replies.handler(async ({ input, context }) => {
   // Verify the parent note exists
   const [parentNote] = await ctx.db.select().from(notes).where(eq(notes.id, input.noteId));
   if (!parentNote) {
-    throw new Error("Note not found");
+    throw new ORPCError("NOT_FOUND", { message: "Note not found" });
   }
 
   const rows = await ctx.db
@@ -616,7 +682,7 @@ const dailyWinner = os.note.dailyWinner.handler(async ({ context }) => {
   return {
     publishedDay: published.publishedDay,
     sourceDay: published.sourceDay,
-    note: published.note,
+    notes: published.notes,
     manual: published.manual,
   };
 });
@@ -648,7 +714,7 @@ const likeToggle = os.like.toggle.handler(async ({ input, context }) => {
   // Verify note exists
   const [note] = await auth.db.select().from(notes).where(eq(notes.id, input.noteId));
   if (!note) {
-    throw new Error("Note not found");
+    throw new ORPCError("NOT_FOUND", { message: "Note not found" });
   }
 
   // Check if already liked
@@ -709,12 +775,12 @@ const recommendCreate = os.recommend.create.handler(async ({ input, context }) =
 
   const [note] = await auth.db.select().from(notes).where(eq(notes.id, input.noteId));
   if (!note) {
-    throw new Error("Note not found");
+    throw new ORPCError("NOT_FOUND", { message: "Note not found" });
   }
 
   const remainingBefore = await getRemainingRecommendations(auth.db, auth.userId);
   if (remainingBefore <= 0) {
-    throw new Error("Recommendation limit reached");
+    throw new ORPCError("FORBIDDEN", { message: "Recommendation limit reached" });
   }
 
   const inserted = await auth.db
@@ -754,11 +820,11 @@ const recommendDelete = os.recommend.delete.handler(async ({ input, context }) =
     .where(eq(recommendations.id, input.recommendationId));
 
   if (!recommendation) {
-    throw new Error("Recommendation not found");
+    throw new ORPCError("NOT_FOUND", { message: "Recommendation not found" });
   }
 
   if (recommendation.userId !== auth.userId) {
-    throw new Error("Forbidden");
+    throw new ORPCError("FORBIDDEN", { message: "Forbidden" });
   }
 
   await auth.db.delete(recommendations).where(eq(recommendations.id, input.recommendationId));
@@ -851,13 +917,28 @@ export default {
     const db = drizzle(env.DB);
     const jwtSecret = getJwtSecret(env);
 
-    const { matched, response } = await rpcHandler.handle(request, {
-      prefix: "/rpc",
-      context: { db, ai: env.AI, jwtSecret, headers: request.headers },
-    });
+    try {
+      const { matched, response } = await rpcHandler.handle(request, {
+        prefix: "/rpc",
+        context: { db, ai: env.AI, jwtSecret, headers: request.headers },
+      });
 
-    if (matched) {
-      return response;
+      if (matched) {
+        return response;
+      }
+    } catch (err) {
+      console.error("[worker] Unhandled error in RPC handler:", err);
+      return new Response(
+        JSON.stringify({
+          json: {
+            defined: false,
+            code: "INTERNAL_SERVER_ERROR",
+            status: 500,
+            message: String(err),
+          },
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      );
     }
 
     return env.ASSETS.fetch(request);

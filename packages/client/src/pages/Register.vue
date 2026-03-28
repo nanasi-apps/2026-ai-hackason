@@ -44,9 +44,9 @@ async function handleRegister() {
           background-clip: text;
         "
       >
-        今北産業SNS
+        今北SNS
       </h1>
-      <p class="text-xs font-mono tracking-widest uppercase" style="color: #6b6b8a">
+      <p class="text-xs font-mono tracking-widest uppercase" style="color: #fff">
         誤読の世界へようこそ
       </p>
     </div>
@@ -55,10 +55,7 @@ async function handleRegister() {
     <div class="rounded-xl border p-6" style="background-color: #12121a; border-color: #2a2a40">
       <form @submit.prevent="handleRegister" class="space-y-4">
         <div>
-          <label
-            class="block text-xs font-mono tracking-wider uppercase mb-2"
-            style="color: #6b6b8a"
-          >
+          <label class="block text-xs font-mono tracking-wider uppercase mb-2" style="color: #fff">
             ユーザー名
           </label>
           <input
@@ -73,10 +70,7 @@ async function handleRegister() {
           />
         </div>
         <div>
-          <label
-            class="block text-xs font-mono tracking-wider uppercase mb-2"
-            style="color: #6b6b8a"
-          >
+          <label class="block text-xs font-mono tracking-wider uppercase mb-2" style="color: #fff">
             パスワード
           </label>
           <input
@@ -111,7 +105,7 @@ async function handleRegister() {
       </form>
     </div>
 
-    <p class="text-center mt-5 text-xs" style="color: #6b6b8a">
+    <p class="text-center mt-5 text-xs" style="color: #fff">
       すでにアカウントをお持ちの方は
       <RouterLink
         to="/login"
