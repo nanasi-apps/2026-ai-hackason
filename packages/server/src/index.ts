@@ -7,17 +7,20 @@ import { contract } from "@aihackason/contract";
 import { users, notes, likes } from "./db/schema";
 import { hashSync, compareSync } from "bcrypt-ts";
 import { SignJWT, jwtVerify } from "jose";
+import { summarizeIntoThreeWords, type AiBinding } from "./threeWordSummary";
 
 // ========== Types ==========
 
 interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
+  AI: AiBinding;
   JWT_SECRET?: string;
 }
 
 interface Context {
   db: DrizzleD1Database;
+  ai: AiBinding;
   jwtSecret: Uint8Array;
   headers: Headers;
 }
@@ -25,6 +28,11 @@ interface Context {
 interface AuthContext extends Context {
   userId: string;
 }
+
+type NoteWithUserRow = {
+  note: typeof notes.$inferSelect;
+  author: typeof users.$inferSelect;
+};
 
 // ========== JWT Helpers ==========
 
@@ -80,12 +88,12 @@ async function optionalAuth(context: Context): Promise<string | null> {
 
 async function enrichNotes(
   db: DrizzleD1Database,
-  noteRows: { notes: typeof notes.$inferSelect; users: typeof users.$inferSelect }[],
+  noteRows: NoteWithUserRow[],
   currentUserId: string | null,
 ) {
   if (noteRows.length === 0) return [];
 
-  const noteIds = noteRows.map((r) => r.notes.id);
+  const noteIds = noteRows.map((row) => row.note.id);
 
   // Get like counts for all notes
   const likeCounts = await db
@@ -140,16 +148,16 @@ async function enrichNotes(
   }
 
   return noteRows.map((row) => ({
-    id: row.notes.id,
-    content: row.notes.content,
-    summary: row.notes.summary ?? null,
-    createdAt: row.notes.createdAt,
-    userId: row.notes.userId,
-    replyTo: row.notes.replyTo ?? null,
-    author: { id: row.users.id, username: row.users.username, createdAt: row.users.createdAt },
-    likeCount: likeCountMap.get(row.notes.id) ?? 0,
-    replyCount: replyCountMap.get(row.notes.id) ?? 0,
-    liked: likedSet.has(row.notes.id),
+    id: row.note.id,
+    content: row.note.content,
+    summary: row.note.summary ?? null,
+    createdAt: row.note.createdAt,
+    userId: row.note.userId,
+    replyTo: row.note.replyTo ?? null,
+    author: { id: row.author.id, username: row.author.username, createdAt: row.author.createdAt },
+    likeCount: likeCountMap.get(row.note.id) ?? 0,
+    replyCount: replyCountMap.get(row.note.id) ?? 0,
+    liked: likedSet.has(row.note.id),
   }));
 }
 
@@ -159,7 +167,7 @@ async function enrichSingleNote(
   author: typeof users.$inferSelect,
   currentUserId: string | null,
 ) {
-  const result = await enrichNotes(db, [{ notes: note, users: author }], currentUserId);
+  const result = await enrichNotes(db, [{ note, author }], currentUserId);
   return result[0];
 }
 
@@ -226,6 +234,11 @@ const meHandler = os.auth.me.handler(async ({ context }) => {
 
 // --- Notes ---
 
+const summarizeThreeWords = os.ai.summarizeThreeWords.handler(async ({ input, context }) => {
+  const ctx = context as Context;
+  return summarizeIntoThreeWords(ctx.ai, input.content);
+});
+
 const createNote = os.note.create.handler(async ({ input, context }) => {
   const ctx = context as Context;
   const auth = await requireAuth(ctx, ctx.headers);
@@ -239,7 +252,7 @@ const createNote = os.note.create.handler(async ({ input, context }) => {
   }
 
   const id = crypto.randomUUID();
-  const [note] = await auth.db
+  const insertedNotes = await auth.db
     .insert(notes)
     .values({
       id,
@@ -248,6 +261,12 @@ const createNote = os.note.create.handler(async ({ input, context }) => {
       replyTo: input.replyTo ?? null,
     })
     .returning();
+
+  if (!Array.isArray(insertedNotes) || insertedNotes.length === 0) {
+    throw new Error("Failed to create note");
+  }
+
+  const [note] = insertedNotes;
 
   const [author] = await auth.db.select().from(users).where(eq(users.id, auth.userId));
 
@@ -259,7 +278,7 @@ const listNotes = os.note.list.handler(async ({ input, context }) => {
   const currentUserId = await optionalAuth(ctx);
 
   const rows = await ctx.db
-    .select()
+    .select({ note: notes, author: users })
     .from(notes)
     .innerJoin(users, eq(notes.userId, users.id))
     .orderBy(desc(notes.createdAt))
@@ -274,7 +293,7 @@ const getNote = os.note.get.handler(async ({ input, context }) => {
   const currentUserId = await optionalAuth(ctx);
 
   const rows = await ctx.db
-    .select()
+    .select({ note: notes, author: users })
     .from(notes)
     .innerJoin(users, eq(notes.userId, users.id))
     .where(eq(notes.id, input.id));
@@ -284,7 +303,7 @@ const getNote = os.note.get.handler(async ({ input, context }) => {
   }
 
   const row = rows[0];
-  return enrichSingleNote(ctx.db, row.notes, row.users, currentUserId);
+  return enrichSingleNote(ctx.db, row.note, row.author, currentUserId);
 });
 
 const deleteNote = os.note.delete.handler(async ({ input, context }) => {
@@ -315,7 +334,7 @@ const listNotesByUser = os.note.listByUser.handler(async ({ input, context }) =>
   }
 
   const rows = await ctx.db
-    .select()
+    .select({ note: notes, author: users })
     .from(notes)
     .innerJoin(users, eq(notes.userId, users.id))
     .where(eq(notes.userId, user.id))
@@ -337,7 +356,7 @@ const noteReplies = os.note.replies.handler(async ({ input, context }) => {
   }
 
   const rows = await ctx.db
-    .select()
+    .select({ note: notes, author: users })
     .from(notes)
     .innerJoin(users, eq(notes.userId, users.id))
     .where(eq(notes.replyTo, input.noteId))
@@ -418,6 +437,9 @@ const router = os.router({
     login,
     me: meHandler,
   },
+  ai: {
+    summarizeThreeWords,
+  },
   note: {
     create: createNote,
     list: listNotes,
@@ -447,7 +469,7 @@ export default {
 
     const { matched, response } = await rpcHandler.handle(request, {
       prefix: "/rpc",
-      context: { db, jwtSecret, headers: request.headers },
+      context: { db, ai: env.AI, jwtSecret, headers: request.headers },
     });
 
     if (matched) {

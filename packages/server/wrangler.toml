@@ -10,6 +10,9 @@ assets = { directory = "../client/dist", binding = "ASSETS" }
 [vars]
 JWT_SECRET = "dev-secret-change-in-production"
 
+[ai]
+binding = "AI"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "aihackason-db"

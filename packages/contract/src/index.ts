@@ -38,6 +38,14 @@ export const NoteWithAuthorSchema = NoteSchema.extend({
 
 export type NoteWithAuthor = z.infer<typeof NoteWithAuthorSchema>;
 
+export const ThreeWordSummarySchema = z.object({
+  words: z.tuple([z.string(), z.string(), z.string()]),
+  summary: z.string(),
+  model: z.string(),
+});
+
+export type ThreeWordSummary = z.infer<typeof ThreeWordSummarySchema>;
+
 // ========== Auth Contract ==========
 
 const register = oc
@@ -110,6 +118,16 @@ const noteReplies = oc
   )
   .output(z.array(NoteWithAuthorSchema));
 
+// ========== AI Contract ==========
+
+const summarizeThreeWords = oc
+  .input(
+    z.object({
+      content: z.string().min(1).max(10000),
+    }),
+  )
+  .output(ThreeWordSummarySchema);
+
 // ========== Like Contract ==========
 
 const LikeResponseSchema = z.object({
@@ -128,6 +146,9 @@ export const contract = {
     register,
     login,
     me,
+  },
+  ai: {
+    summarizeThreeWords,
   },
   note: {
     create: createNote,

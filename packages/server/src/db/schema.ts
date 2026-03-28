@@ -1,4 +1,4 @@
-import { sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, uniqueIndex, type AnySQLiteColumn } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 
 export const users = sqliteTable("users", {
@@ -17,7 +17,7 @@ export const notes = sqliteTable("notes", {
     .references(() => users.id),
   content: text("content").notNull(),
   summary: text("summary"),
-  replyTo: text("reply_to").references(() => notes.id),
+  replyTo: text("reply_to").references((): AnySQLiteColumn => notes.id),
   createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),
