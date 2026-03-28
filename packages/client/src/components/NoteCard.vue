@@ -182,13 +182,14 @@ function formatDate(dateStr: string) {
           v-if="isOwner"
           type="button"
           @click="handleDelete"
-          class="text-xs transition-colors"
-          style="color: #fff"
-          onmouseover="this.style.color = &quot;#e85d9a&quot;;"
-          onmouseout="this.style.color = &quot;#fff&quot;;"
+          :disabled="deleteMutation.isPending.value"
+          class="rounded-full border px-3 py-1 text-xs font-medium transition-all disabled:opacity-50"
+          style="border-color: #e85d9a66; background-color: #e85d9a14; color: #e85d9a"
+          onmouseover="this.style.backgroundColor = &quot;#e85d9a22&quot;;"
+          onmouseout="this.style.backgroundColor = &quot;#e85d9a14&quot;;"
           @click.stop
         >
-          ×
+          {{ deleteMutation.isPending.value ? "削除中..." : "削除" }}
         </button>
       </div>
     </div>
@@ -199,19 +200,14 @@ function formatDate(dateStr: string) {
           v-for="(line, i) in summaryLines"
           :key="`${note.id}-${i}`"
           class="text-sm font-medium leading-relaxed"
-          style="
-            font-family: &quot;Space Mono&quot;, monospace;
-            background: linear-gradient(135deg, #a99af9 0%, #e85d9a 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-          "
+          style="font-family: &quot;Space Mono&quot;, monospace; color: #fff"
           >{{ line }}</span
         >
       </div>
     </div>
 
     <div v-if="props.full && note.content" class="px-5 py-4">
+      <div class="text-xs mb-2" style="color: #7c6af7">原文</div>
       <p class="whitespace-pre-wrap text-sm leading-7" style="color: #fff">
         {{ note.content }}
       </p>

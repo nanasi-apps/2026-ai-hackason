@@ -93,9 +93,9 @@ const publishMutation = useMutation({
               {{ data.manual ? "手動" : "自動" }}
             </span>
           </p>
-          <p v-if="data.note">
-            <span style="color: #3a3a55">現在の投稿: </span>
-            <span style="color: #a99af9">@{{ data.note.author.username }}</span>
+          <p v-if="data.notes.length > 0">
+            <span style="color: #3a3a55">現在の投稿数: </span>
+            <span style="color: #a99af9">{{ data.notes.length }}件</span>
           </p>
           <p v-else style="color: #3a3a55">まだ winner がいません。</p>
         </div>
