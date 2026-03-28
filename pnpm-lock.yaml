@@ -35,6 +35,9 @@ importers:
       '@orpc/tanstack-query':
         specifier: latest
         version: 1.13.13(@orpc/client@1.13.13)(@tanstack/query-core@5.95.2)
+      '@tabler/icons-vue':
+        specifier: ^3.34.1
+        version: 3.41.0(vue@3.5.31(typescript@5.9.3))
       '@tanstack/vue-query':
         specifier: ^5.64.0
         version: 5.95.2(vue@3.5.31(typescript@5.9.3))
@@ -1213,6 +1216,14 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
+  '@tabler/icons-vue@3.41.0':
+    resolution: {integrity: sha512-DrfreCW00AlfX1qgfEmJKbIqmQLOWakiGnriqej4AXeVPM10E/7VOwH+PYz61/5WQiRwqWIlNlhWNJh4OdJjgg==}
+    peerDependencies:
+      vue: '>=3.0.1'
+
+  '@tabler/icons@3.41.0':
+    resolution: {integrity: sha512-arlig0nkaC9UGqTZuT1MMZepX29t3Ysx5HSy2UvmR+CZrhlNxZrCM6Z4qYBoaIO+2ICZykttjBCSpf+p/t0H3w==}
 
   '@tailwindcss/node@4.2.2':
     resolution: {integrity: sha512-pXS+wJ2gZpVXqFaUEjojq7jzMpTGf8rU6ipJz5ovJV6PUGmlJ+jvIwGrzdHdQ80Sg+wmQxUFuoW1UAAwHNEdFA==}
@@ -2815,6 +2826,13 @@ snapshots:
   '@speed-highlight/core@1.2.15': {}
 
   '@standard-schema/spec@1.1.0': {}
+
+  '@tabler/icons-vue@3.41.0(vue@3.5.31(typescript@5.9.3))':
+    dependencies:
+      '@tabler/icons': 3.41.0
+      vue: 3.5.31(typescript@5.9.3)
+
+  '@tabler/icons@3.41.0': {}
 
   '@tailwindcss/node@4.2.2':
     dependencies:

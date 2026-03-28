@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
+import { useRoute, useRouter } from "vue-router";
 import { client, orpc } from "../lib/orpc";
 import { useAuth } from "../composables/useAuth";
 import NoteCard from "../components/NoteCard.vue";
 
 const { isLoggedIn } = useAuth();
 const queryClient = useQueryClient();
+const route = useRoute();
+const router = useRouter();
 
 const content = ref("");
 const postError = ref("");
+const composerRef = ref<HTMLTextAreaElement | null>(null);
 
 const { data: notes, isLoading } = useQuery(orpc.note.list.queryOptions({ input: { limit: 50 } }));
 const { data: myRecommendations } = useQuery({
@@ -47,6 +51,35 @@ const charColor = () => {
   if (content.value.length > charLimit * 0.7) return "#f59e0b";
   return "#fff";
 };
+
+async function focusComposer() {
+  await nextTick();
+  composerRef.value?.scrollIntoView({ behavior: "smooth", block: "center" });
+  composerRef.value?.focus();
+}
+
+function handleOpenComposerEvent() {
+  if (!isLoggedIn.value) return;
+  focusComposer();
+}
+
+onMounted(() => {
+  window.addEventListener("open-composer", handleOpenComposerEvent);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("open-composer", handleOpenComposerEvent);
+});
+
+watch(
+  () => route.query.compose,
+  async (compose) => {
+    if (compose !== "1" || !isLoggedIn.value) return;
+    await focusComposer();
+    router.replace({ path: "/" });
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -61,6 +94,7 @@ const charColor = () => {
           今日の残り推薦 {{ myRecommendations.remainingCount }}
         </div>
         <textarea
+          ref="composerRef"
           v-model="content"
           rows="4"
           class="w-full resize-none bg-transparent text-sm leading-relaxed focus:outline-none"
