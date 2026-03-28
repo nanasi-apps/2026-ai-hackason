@@ -1,47 +1,52 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { RouterLink } from 'vue-router'
-import { useMutation, useQueryClient } from '@tanstack/vue-query'
-import { client, orpc } from '../lib/orpc'
-import { useAuth } from '../composables/useAuth'
-import type { NoteWithAuthor } from '@aihackason/contract'
+import { ref, computed } from "vue";
+import { RouterLink } from "vue-router";
+import { useMutation, useQueryClient } from "@tanstack/vue-query";
+import { client, orpc } from "../lib/orpc";
+import { useAuth } from "../composables/useAuth";
+import type { NoteWithAuthor } from "@aihackason/contract";
 
-const props = withDefaults(defineProps<{
-  note: NoteWithAuthor
-  full?: boolean
-}>(), {
-  full: false,
-})
+const props = withDefaults(
+  defineProps<{
+    note: NoteWithAuthor;
+    full?: boolean;
+  }>(),
+  {
+    full: false,
+  },
+);
 
-const { user } = useAuth()
-const queryClient = useQueryClient()
+const { user } = useAuth();
+const queryClient = useQueryClient();
 
-const isOwner = computed(() => user.value?.id === props.note.userId)
+const isOwner = computed(() => user.value?.id === props.note.userId);
 
 const deleteMutation = useMutation({
   mutationFn: () => client.note.delete({ id: props.note.id }),
   onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: orpc.note.list.queryOptions({}).queryKey })
+    queryClient.invalidateQueries({
+      queryKey: orpc.note.list.queryOptions({ input: {} }).queryKey,
+    });
   },
-})
+});
 
 function handleDelete() {
-  if (confirm('Delete this post?')) {
-    deleteMutation.mutate()
+  if (confirm("Delete this post?")) {
+    deleteMutation.mutate();
   }
 }
 
 function formatDate(dateStr: string) {
-  const d = new Date(dateStr + 'Z')
-  return d.toLocaleString()
+  const d = new Date(dateStr + "Z");
+  return d.toLocaleString();
 }
 
-const expanded = ref(props.full)
-const isLong = computed(() => props.note.content.length > 280)
+const expanded = ref(props.full);
+const isLong = computed(() => props.note.content.length > 280);
 const displayContent = computed(() => {
-  if (expanded.value || !isLong.value) return props.note.content
-  return props.note.content.slice(0, 280) + '...'
-})
+  if (expanded.value || !isLong.value) return props.note.content;
+  return props.note.content.slice(0, 280) + "...";
+});
 </script>
 
 <template>
@@ -54,10 +59,7 @@ const displayContent = computed(() => {
         @{{ note.author.username }}
       </RouterLink>
       <div class="flex items-center gap-2">
-        <RouterLink
-          :to="`/${note.id}`"
-          class="text-xs text-gray-400 hover:underline"
-        >
+        <RouterLink :to="`/${note.id}`" class="text-xs text-gray-400 hover:underline">
           {{ formatDate(note.createdAt) }}
         </RouterLink>
         <button

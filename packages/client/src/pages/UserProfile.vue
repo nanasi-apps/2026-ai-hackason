@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query'
-import { orpc } from '../lib/orpc'
-import NoteCard from '../components/NoteCard.vue'
+import { useQuery } from "@tanstack/vue-query";
+import { orpc } from "../lib/orpc";
+import NoteCard from "../components/NoteCard.vue";
 
-const props = defineProps<{ username: string }>()
+const props = defineProps<{ username: string }>();
 
 const { data: notes, isLoading } = useQuery(
   orpc.note.listByUser.queryOptions({ input: { username: props.username, limit: 50 } }),
-)
+);
 </script>
 
 <template>

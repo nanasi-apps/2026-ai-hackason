@@ -18,7 +18,9 @@ const createMutation = useMutation({
   onSuccess: () => {
     content.value = "";
     postError.value = "";
-    queryClient.invalidateQueries({ queryKey: orpc.note.list.queryOptions({}).queryKey });
+    queryClient.invalidateQueries({
+      queryKey: orpc.note.list.queryOptions({ input: {} }).queryKey,
+    });
   },
   onError: (e: any) => {
     postError.value = e.message || "Failed to post";
