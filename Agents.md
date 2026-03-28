@@ -2,3 +2,4 @@
 @docs/kousou.md
 計画書は次のとおりです。
 @docs/plan.md
+CIがこけていたらダメなので、CIがこけないようにしてください
