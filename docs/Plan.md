@@ -109,16 +109,17 @@
 
 ### Note（投稿）
 
-| エンドポイント        | Input                                                     | Output                                                                     |
-| --------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `note.create`         | `{ content, replyTo? }` ※認証必須 ※contentは最大5,000文字 | `{ note }` (著者+いいね数+返信数+推薦数付き)                               |
-| `note.list`           | `{ limit?, offset? }`                                     | `{ notes[] }` (著者+いいね数+返信数+推薦数付き)                            |
-| `note.get`            | `{ id }`                                                  | `{ note }` (著者+いいね数+返信数+推薦数付き。原文は本人または解放済みのみ) |
-| `note.delete`         | `{ id }` ※自分の投稿のみ                                  | `{ success }`                                                              |
-| `note.listByUser`     | `{ username, limit?, offset? }`                           | `{ notes[] }`                                                              |
-| `note.replies`        | `{ noteId, limit?, offset? }`                             | `{ notes[] }` (その投稿への返信一覧)                                       |
-| `note.topRecommended` | `{ limit? }`                                              | `{ notes[] }` (当日推薦数の多い順。UI補助用)                               |
-| `note.dailyWinner`    | なし                                                      | `{ day, note }` (前日集計で最も推薦された投稿)                             |
+| エンドポイント               | Input                                                     | Output                                                                           |
+| ---------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `note.create`                | `{ content, replyTo? }` ※認証必須 ※contentは最大5,000文字 | `{ note }` (著者+いいね数+返信数+推薦数付き)                                     |
+| `note.list`                  | `{ limit?, offset? }`                                     | `{ notes[] }` (著者+いいね数+返信数+推薦数付き)                                  |
+| `note.get`                   | `{ id }`                                                  | `{ note }` (著者+いいね数+返信数+推薦数付き。原文は本人または解放済みのみ)       |
+| `note.delete`                | `{ id }` ※自分の投稿のみ                                  | `{ success }`                                                                    |
+| `note.listByUser`            | `{ username, limit?, offset? }`                           | `{ notes[] }`                                                                    |
+| `note.replies`               | `{ noteId, limit?, offset? }`                             | `{ notes[] }` (その投稿への返信一覧)                                             |
+| `note.topRecommended`        | `{ limit? }`                                              | `{ notes[] }` (当日推薦数の多い順。UI補助用)                                     |
+| `note.dailyWinner`           | なし                                                      | `{ publishedDay, sourceDay, note, manual }` (当日公開されている Daily Recommend) |
+| `note.publishDailyRecommend` | `{ sourceDay? }` ※認証必須・管理者限定                    | `{ publishedDay, sourceDay, note, manual }`                                      |
 
 ### Like（いいね）
 
@@ -169,7 +170,7 @@
 5. `note.replies` 実装
 6. 推薦は1ユーザー最大3件、同一投稿への複数推薦可のバリデーション実装
 7. 推薦は当日単位で集計し、前日の最多推薦投稿を取得できるようにする
-8. `recommend.create` / `recommend.delete` / `recommend.listMine` / `note.topRecommended` / `note.dailyWinner` 実装
+8. `recommend.create` / `recommend.delete` / `recommend.listMine` / `note.topRecommended` / `note.dailyWinner` / `note.publishDailyRecommend` 実装
 9. 既存の note 系エンドポイントに likeCount, replyCount, liked, recommendCount, unlocked を付与
 
 #### Client
@@ -180,8 +181,9 @@
 4. 返信投稿 UI
 5. 推薦ボタン + その日の残り推薦数の表示
 6. タイムラインに「日次集計で翌日に解放される」案内を表示
-7. `/recommend` ページを追加し、前日の1位投稿を表示
-8. `Daily Recommend` 対象だけ原文を閲覧できる UI を追加
+7. `/recommend` ページを追加し、当日公開されている Daily Recommend を表示
+8. `/admin/recommend` を追加し、管理者が即時公開できるようにする
+9. `Daily Recommend` 対象だけ原文を閲覧できる UI を追加
 
 ### Phase 2: AI要約（後日）
 

@@ -60,3 +60,14 @@ export const recommendations = sqliteTable("recommendations", {
     .notNull()
     .default(sql`(datetime('now'))`),
 });
+
+export const dailyRecommendState = sqliteTable("daily_recommend_state", {
+  id: text("id").primaryKey(),
+  publishedDay: text("published_day").notNull().unique(),
+  sourceDay: text("source_day").notNull(),
+  noteId: text("note_id").references(() => notes.id),
+  manual: integer("manual", { mode: "boolean" }).notNull().default(false),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});

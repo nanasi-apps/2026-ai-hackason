@@ -44,7 +44,7 @@ async function handleRegister() {
           background-clip: text;
         "
       >
-        MISREADER
+        今北産業SNS
       </h1>
       <p class="text-xs font-mono tracking-widest uppercase" style="color: #3a3a55">
         誤読の世界へようこそ

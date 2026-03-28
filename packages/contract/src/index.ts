@@ -20,7 +20,6 @@ export type AuthResponse = z.infer<typeof AuthResponseSchema>;
 
 export const NoteSchema = z.object({
   id: z.string(),
-  content: z.string(),
   summary: z.string().nullable(),
   createdAt: z.string(),
   userId: z.string(),
@@ -35,7 +34,7 @@ export const NoteWithAuthorSchema = NoteSchema.extend({
   replyCount: z.number(),
   liked: z.boolean(),
   recommendCount: z.number(),
-  unlocked: z.boolean(),
+  recommended: z.boolean(),
 });
 
 export type NoteWithAuthor = z.infer<typeof NoteWithAuthorSchema>;
@@ -58,8 +57,10 @@ export const RecommendationSchema = z.object({
 export type Recommendation = z.infer<typeof RecommendationSchema>;
 
 export const DailyWinnerSchema = z.object({
-  day: z.string(),
+  publishedDay: z.string(),
+  sourceDay: z.string(),
   note: NoteWithAuthorSchema.nullable(),
+  manual: z.boolean(),
 });
 
 export type DailyWinner = z.infer<typeof DailyWinnerSchema>;
@@ -146,6 +147,14 @@ const topRecommendedNotes = oc
 
 const dailyWinnerNote = oc.output(DailyWinnerSchema);
 
+const publishDailyRecommend = oc
+  .input(
+    z.object({
+      sourceDay: z.string().optional(),
+    }),
+  )
+  .output(DailyWinnerSchema);
+
 // ========== AI Contract ==========
 
 const summarizeThreeWords = oc
@@ -219,6 +228,7 @@ export const contract = {
     replies: noteReplies,
     topRecommended: topRecommendedNotes,
     dailyWinner: dailyWinnerNote,
+    publishDailyRecommend,
   },
   like: {
     toggle: likeToggle,
