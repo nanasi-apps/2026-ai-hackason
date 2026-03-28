@@ -1,1 +1,101 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap");
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
+
+  --color-brand-black: #0a0a0f;
+  --color-brand-deep: #12121a;
+  --color-brand-surface: #1a1a28;
+  --color-brand-border: #2a2a40;
+  --color-brand-muted: #3a3a55;
+  --color-brand-subtle: #6b6b8a;
+  --color-brand-text: #e8e8f0;
+  --color-brand-accent: #7c6af7;
+  --color-brand-accent-light: #a99af9;
+  --color-brand-glow: #5b4de0;
+  --color-brand-pink: #e85d9a;
+  --color-brand-teal: #3dd6c2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--color-brand-black);
+  color: var(--color-brand-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-brand-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-brand-muted);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-subtle);
+}
+
+/* Selection */
+::selection {
+  background: #7c6af740;
+  color: #fff;
+}
+
+/* Glitch animation for MISREADER logo */
+@keyframes glitch {
+  0%,
+  100% {
+    clip-path: inset(0 0 100% 0);
+  }
+  20% {
+    clip-path: inset(30% 0 40% 0);
+    transform: translate(-2px, 0);
+  }
+  40% {
+    clip-path: inset(60% 0 10% 0);
+    transform: translate(2px, 0);
+  }
+  60% {
+    clip-path: inset(10% 0 70% 0);
+    transform: translate(-1px, 0);
+  }
+  80% {
+    clip-path: inset(80% 0 5% 0);
+    transform: translate(1px, 0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 8px #7c6af740;
+  }
+  50% {
+    box-shadow: 0 0 20px #7c6af780;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.3s ease-out;
+}

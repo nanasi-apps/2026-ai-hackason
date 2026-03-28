@@ -23,7 +23,7 @@ async function handleRegister() {
     setAuth(result.token, result.user);
     router.push("/");
   } catch (e: any) {
-    error.value = e.message || "Registration failed";
+    error.value = e.message || "アカウント作成に失敗しました";
   } finally {
     loading.value = false;
   }
@@ -32,41 +32,95 @@ async function handleRegister() {
 
 <template>
   <div class="max-w-sm mx-auto mt-16">
-    <h1 class="text-2xl font-bold text-center mb-6">Register</h1>
-    <form @submit.prevent="handleRegister" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-        <input
-          v-model="username"
-          type="text"
-          required
-          class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
-          placeholder="3-20 characters (a-z, 0-9, _)"
-        />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-        <input
-          v-model="password"
-          type="password"
-          required
-          minlength="6"
-          class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
-          placeholder="6 characters minimum"
-        />
-      </div>
-      <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
-      <button
-        type="submit"
-        :disabled="loading"
-        class="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-gray-800 disabled:opacity-50"
+    <!-- Brand -->
+    <div class="text-center mb-8">
+      <h1
+        class="text-3xl font-bold tracking-widest uppercase mb-2"
+        style="
+          font-family: &quot;Space Mono&quot;, monospace;
+          background: linear-gradient(135deg, #a99af9 0%, #e85d9a 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        "
       >
-        {{ loading ? "..." : "Create Account" }}
-      </button>
-    </form>
-    <p class="text-center mt-4 text-sm text-gray-500">
-      Already have an account?
-      <RouterLink to="/login" class="text-gray-900 underline">Login</RouterLink>
+        MISREADER
+      </h1>
+      <p class="text-xs font-mono tracking-widest uppercase" style="color: #3a3a55">
+        誤読の世界へようこそ
+      </p>
+    </div>
+
+    <!-- Form card -->
+    <div class="rounded-xl border p-6" style="background-color: #12121a; border-color: #2a2a40">
+      <form @submit.prevent="handleRegister" class="space-y-4">
+        <div>
+          <label
+            class="block text-xs font-mono tracking-wider uppercase mb-2"
+            style="color: #6b6b8a"
+          >
+            ユーザー名
+          </label>
+          <input
+            v-model="username"
+            type="text"
+            required
+            class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none transition-colors bg-transparent"
+            style="border: 1px solid #2a2a40; color: #e8e8f0; caret-color: #a99af9"
+            onfocus="this.style.borderColor = &quot;#7c6af7&quot;;"
+            onblur="this.style.borderColor = &quot;#2a2a40&quot;;"
+            placeholder="3〜20文字 (a-z, 0-9, _)"
+          />
+        </div>
+        <div>
+          <label
+            class="block text-xs font-mono tracking-wider uppercase mb-2"
+            style="color: #6b6b8a"
+          >
+            パスワード
+          </label>
+          <input
+            v-model="password"
+            type="password"
+            required
+            minlength="6"
+            class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none transition-colors bg-transparent"
+            style="border: 1px solid #2a2a40; color: #e8e8f0; caret-color: #a99af9"
+            onfocus="this.style.borderColor = &quot;#7c6af7&quot;;"
+            onblur="this.style.borderColor = &quot;#2a2a40&quot;;"
+            placeholder="6文字以上"
+          />
+        </div>
+
+        <p
+          v-if="error"
+          class="text-xs font-mono py-2 px-3 rounded-lg"
+          style="color: #e85d9a; background-color: #e85d9a15; border: 1px solid #e85d9a30"
+        >
+          {{ error }}
+        </p>
+
+        <button
+          type="submit"
+          :disabled="loading"
+          class="w-full py-2.5 rounded-full text-sm font-medium transition-all disabled:opacity-40 mt-2"
+          style="background: linear-gradient(135deg, #7c6af7 0%, #e85d9a 100%); color: white"
+        >
+          {{ loading ? "..." : "アカウント作成" }}
+        </button>
+      </form>
+    </div>
+
+    <p class="text-center mt-5 text-xs" style="color: #3a3a55">
+      すでにアカウントをお持ちの方は
+      <RouterLink
+        to="/login"
+        class="transition-colors"
+        style="color: #a99af9"
+        onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+        onmouseout="this.style.color = &quot;#a99af9&quot;;"
+        >ログイン</RouterLink
+      >
     </p>
   </div>
 </template>

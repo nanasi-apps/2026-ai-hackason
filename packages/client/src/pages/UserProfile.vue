@@ -12,11 +12,45 @@ const { data: notes, isLoading } = useQuery(
 
 <template>
   <div>
-    <h1 class="text-xl font-bold mb-4">@{{ username }}</h1>
-    <div v-if="isLoading" class="text-center text-gray-400 py-8">Loading...</div>
-    <div v-else-if="notes && notes.length > 0" class="space-y-4">
+    <!-- Profile header -->
+    <div class="mb-8">
+      <div class="flex items-center gap-4 mb-6">
+        <div
+          class="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0"
+          style="background: linear-gradient(135deg, #7c6af7 0%, #e85d9a 100%); color: white"
+        >
+          {{ username.charAt(0).toUpperCase() }}
+        </div>
+        <div>
+          <h1 class="text-lg font-bold" style="color: #e8e8f0">@{{ username }}</h1>
+          <p class="text-xs font-mono mt-0.5" style="color: #3a3a55">
+            {{ notes ? notes.length : "..." }} 件の投稿
+          </p>
+        </div>
+      </div>
+      <div
+        class="h-px"
+        style="background: linear-gradient(90deg, #7c6af7 0%, #e85d9a 40%, transparent 100%)"
+      ></div>
+    </div>
+
+    <!-- Posts -->
+    <div class="flex items-center gap-3 mb-4">
+      <span class="text-xs font-mono tracking-widest uppercase" style="color: #3a3a55">投稿</span>
+      <div class="flex-1 h-px" style="background-color: #2a2a40"></div>
+    </div>
+
+    <div v-if="isLoading" class="text-center py-12">
+      <div
+        class="inline-block w-5 h-5 rounded-full border-2 animate-spin"
+        style="border-color: #2a2a40; border-top-color: #7c6af7"
+      ></div>
+    </div>
+    <div v-else-if="notes && notes.length > 0" class="space-y-3">
       <NoteCard v-for="note in notes" :key="note.id" :note="note" />
     </div>
-    <div v-else class="text-center text-gray-400 py-8">No posts yet</div>
+    <div v-else class="text-center py-16">
+      <p class="text-sm font-mono" style="color: #3a3a55">まだ投稿がありません</p>
+    </div>
   </div>
 </template>

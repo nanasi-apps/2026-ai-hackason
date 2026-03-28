@@ -30,7 +30,7 @@ const replyMutation = useMutation({
     queryClient.invalidateQueries();
   },
   onError: (e: Error) => {
-    replyError.value = e.message || "Failed to reply";
+    replyError.value = e.message || "返信に失敗しました";
   },
 });
 
@@ -42,47 +42,97 @@ function handleReply() {
 
 <template>
   <div>
-    <div v-if="isLoading" class="text-center text-gray-400 py-8">Loading...</div>
-    <div v-else-if="error" class="text-center text-red-500 py-8">{{ error.message }}</div>
+    <!-- Loading -->
+    <div v-if="isLoading" class="text-center py-16">
+      <div
+        class="inline-block w-5 h-5 rounded-full border-2 animate-spin"
+        style="border-color: #2a2a40; border-top-color: #7c6af7"
+      ></div>
+    </div>
+
+    <!-- Error -->
+    <div v-else-if="error" class="text-center py-12">
+      <p class="text-sm font-mono" style="color: #e85d9a">{{ error.message }}</p>
+    </div>
+
     <div v-else-if="note">
+      <!-- Note card -->
       <NoteCard :note="note" :full="true" />
 
       <!-- Reply form -->
-      <div v-if="isLoggedIn" class="bg-white rounded-lg border border-gray-200 p-4 mt-4">
-        <h3 class="text-sm font-semibold text-gray-700 mb-2">Reply</h3>
-        <textarea
-          v-model="replyContent"
-          rows="2"
-          class="w-full border border-gray-200 rounded-md px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-gray-900"
-          placeholder="Write a reply..."
-        />
-        <div class="flex items-center justify-between mt-2">
-          <p v-if="replyError" class="text-red-500 text-sm">{{ replyError }}</p>
-          <span v-else class="text-sm text-gray-400">{{ replyContent.length }} / 5000</span>
+      <div
+        v-if="isLoggedIn"
+        class="rounded-xl border mt-4 overflow-hidden"
+        style="background-color: #12121a; border-color: #2a2a40"
+      >
+        <div class="px-4 pt-3 pb-2">
+          <p class="text-xs font-mono tracking-wider uppercase mb-2" style="color: #3a3a55">返信</p>
+          <textarea
+            v-model="replyContent"
+            rows="3"
+            class="w-full resize-none focus:outline-none text-sm leading-relaxed bg-transparent"
+            style="color: #e8e8f0; caret-color: #a99af9"
+            placeholder="返信を書く..."
+          />
+        </div>
+        <div
+          class="flex items-center justify-between px-4 py-3 border-t"
+          style="border-color: #2a2a4060"
+        >
+          <p v-if="replyError" class="text-xs" style="color: #e85d9a">{{ replyError }}</p>
+          <span v-else class="text-xs font-mono" style="color: #3a3a55">{{
+            replyContent.length
+          }}</span>
           <button
             @click="handleReply"
             :disabled="!replyContent.trim() || replyMutation.isPending.value"
-            class="bg-gray-900 text-white px-4 py-1.5 rounded-md text-sm hover:bg-gray-800 disabled:opacity-50"
+            class="px-5 py-1.5 rounded-full text-sm font-medium transition-all disabled:opacity-40"
+            style="background: linear-gradient(135deg, #7c6af7 0%, #e85d9a 100%); color: white"
           >
-            {{ replyMutation.isPending.value ? "Replying..." : "Reply" }}
+            {{ replyMutation.isPending.value ? "送信中..." : "返信する" }}
           </button>
         </div>
       </div>
+
+      <!-- Login prompt -->
       <div
         v-else
-        class="bg-white rounded-lg border border-gray-200 p-4 mt-4 text-center text-gray-500"
+        class="rounded-xl border mt-4 p-5 text-center"
+        style="background-color: #12121a; border-color: #2a2a40"
       >
-        <RouterLink to="/login" class="text-gray-900 underline">Login</RouterLink> to reply
+        <p class="text-sm" style="color: #6b6b8a">
+          <RouterLink
+            to="/login"
+            style="color: #a99af9"
+            onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+            onmouseout="this.style.color = &quot;#a99af9&quot;;"
+            >ログイン</RouterLink
+          >
+          して返信する
+        </p>
       </div>
 
-      <!-- Replies list -->
-      <div class="mt-4">
-        <h3 class="text-sm font-semibold text-gray-700 mb-3">Replies ({{ note.replyCount }})</h3>
-        <div v-if="repliesLoading" class="text-center text-gray-400 py-4">Loading replies...</div>
+      <!-- Replies section -->
+      <div class="mt-6">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="text-xs font-mono tracking-widest uppercase" style="color: #3a3a55">
+            返信 ({{ note.replyCount }})
+          </span>
+          <div class="flex-1 h-px" style="background-color: #2a2a40"></div>
+        </div>
+
+        <div v-if="repliesLoading" class="text-center py-8">
+          <div
+            class="inline-block w-4 h-4 rounded-full border-2 animate-spin"
+            style="border-color: #2a2a40; border-top-color: #7c6af7"
+          ></div>
+        </div>
         <div v-else-if="replies && replies.length > 0" class="space-y-3">
           <NoteCard v-for="reply in replies" :key="reply.id" :note="reply" />
         </div>
-        <div v-else class="text-center text-gray-400 py-4">No replies yet</div>
+        <div v-else class="text-center py-8">
+          <p class="text-sm font-mono" style="color: #3a3a55">まだ返信がありません</p>
+        </div>
       </div>
     </div>
   </div>

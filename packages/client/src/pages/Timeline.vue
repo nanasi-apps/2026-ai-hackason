@@ -12,10 +12,6 @@ const content = ref("");
 const postError = ref("");
 
 const { data: notes, isLoading } = useQuery(orpc.note.list.queryOptions({ input: { limit: 50 } }));
-const { data: myRecommendations } = useQuery({
-  ...orpc.recommend.listMine.queryOptions(),
-  enabled: isLoggedIn,
-});
 
 const createMutation = useMutation({
   mutationFn: (content: string) => client.note.create({ content }),
@@ -25,7 +21,7 @@ const createMutation = useMutation({
     queryClient.invalidateQueries();
   },
   onError: (e: any) => {
-    postError.value = e.message || "Failed to post";
+    postError.value = e.message || "投稿に失敗しました";
   },
 });
 
@@ -33,65 +29,119 @@ function handlePost() {
   if (!content.value.trim()) return;
   createMutation.mutate(content.value);
 }
+
+const charLimit = 5000;
+const charColor = () => {
+  if (content.value.length > charLimit * 0.9) return "#e85d9a";
+  if (content.value.length > charLimit * 0.7) return "#f59e0b";
+  return "#3a3a55";
+};
 </script>
 
 <template>
   <div>
-    <div
-      class="mb-6 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4"
-    >
-      <div class="flex items-center justify-between gap-4">
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Recommend</p>
-          <h2 class="mt-1 text-lg font-semibold text-gray-900">
-            Daily aggregation opens tomorrow's winner
-          </h2>
-        </div>
-        <p v-if="isLoggedIn && myRecommendations" class="text-sm text-amber-800">
-          Remaining today: {{ myRecommendations.remainingCount }}
-        </p>
-      </div>
-      <p class="mt-3 text-sm leading-6 text-gray-600">
-        Recommendations are collected through the day. The most recommended note is opened on the
-        next day in
-        <RouterLink to="/recommend" class="font-medium text-amber-800 underline"
-          >Daily Recommend</RouterLink
-        >.
+    <!-- Hero text -->
+    <div class="mb-8 text-center">
+      <p class="text-sm font-mono tracking-widest uppercase" style="color: #3a3a55">
+        あなたの言葉を、AIが盛大に誤読する
       </p>
     </div>
 
     <!-- Post form -->
-    <div v-if="isLoggedIn" class="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-      <textarea
-        v-model="content"
-        rows="3"
-        class="w-full border border-gray-200 rounded-md px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-gray-900"
-        placeholder="What's on your mind?"
-      />
-      <div class="flex items-center justify-between mt-2">
-        <p v-if="postError" class="text-red-500 text-sm">{{ postError }}</p>
-        <span v-else class="text-sm text-gray-400">{{ content.length }} / 5000</span>
+    <div
+      v-if="isLoggedIn"
+      class="rounded-xl border mb-8 overflow-hidden"
+      style="background-color: #12121a; border-color: #2a2a40"
+    >
+      <div class="px-4 pt-4 pb-3">
+        <textarea
+          v-model="content"
+          rows="4"
+          class="w-full resize-none focus:outline-none text-sm leading-relaxed bg-transparent"
+          style="color: #e8e8f0; caret-color: #a99af9"
+          placeholder="何でも書いてください。AIが盛大に誤読します。"
+          :maxlength="charLimit"
+        />
+      </div>
+      <div
+        class="flex items-center justify-between px-4 py-3 border-t"
+        style="border-color: #2a2a4060"
+      >
+        <div class="flex items-center gap-3">
+          <p v-if="postError" class="text-xs" style="color: #e85d9a">{{ postError }}</p>
+          <span v-else class="text-xs font-mono" :style="{ color: charColor() }">
+            {{ content.length }} / {{ charLimit }}
+          </span>
+        </div>
         <button
           @click="handlePost"
           :disabled="!content.trim() || createMutation.isPending.value"
-          class="bg-gray-900 text-white px-4 py-1.5 rounded-md text-sm hover:bg-gray-800 disabled:opacity-50"
+          class="px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-150 disabled:opacity-40"
+          style="background: linear-gradient(135deg, #7c6af7 0%, #e85d9a 100%); color: white"
         >
-          {{ createMutation.isPending.value ? "Posting..." : "Post" }}
+          {{ createMutation.isPending.value ? "投稿中..." : "投稿" }}
         </button>
       </div>
     </div>
+
+    <!-- Login prompt -->
     <div
       v-else
-      class="bg-white rounded-lg border border-gray-200 p-4 mb-6 text-center text-gray-500"
+      class="rounded-xl border mb-8 p-6 text-center"
+      style="background-color: #12121a; border-color: #2a2a40"
     >
-      <RouterLink to="/login" class="text-gray-900 underline">Login</RouterLink> to post
+      <p class="text-sm mb-3" style="color: #6b6b8a">
+        投稿するには
+        <RouterLink
+          to="/login"
+          class="transition-colors"
+          style="color: #a99af9"
+          onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+          onmouseout="this.style.color = &quot;#a99af9&quot;;"
+          >ログイン</RouterLink
+        >
+        してください
+      </p>
+      <div class="flex justify-center gap-3">
+        <RouterLink
+          to="/login"
+          class="px-4 py-1.5 rounded-full text-sm transition-colors"
+          style="border: 1px solid #2a2a40; color: #6b6b8a"
+          onmouseover="this.style.borderColor = &quot;#7c6af7&quot;;
+          this.style.color = &quot;#a99af9&quot;;"
+          onmouseout="this.style.borderColor = &quot;#2a2a40&quot;;
+          this.style.color = &quot;#6b6b8a&quot;;"
+          >ログイン</RouterLink
+        >
+        <RouterLink
+          to="/register"
+          class="px-4 py-1.5 rounded-full text-sm font-medium"
+          style="background: linear-gradient(135deg, #7c6af7 0%, #e85d9a 100%); color: white"
+          >新規登録</RouterLink
+        >
+      </div>
     </div>
 
-    <!-- Timeline -->
-    <div v-if="isLoading" class="text-center text-gray-400 py-8">Loading...</div>
-    <div v-else-if="notes && notes.length > 0" class="space-y-4">
+    <!-- Timeline label -->
+    <div class="flex items-center gap-3 mb-4">
+      <span class="text-xs font-mono tracking-widest uppercase" style="color: #3a3a55"
+        >タイムライン</span
+      >
+      <div class="flex-1 h-px" style="background-color: #2a2a40"></div>
+    </div>
+
+    <!-- Notes -->
+    <div v-if="isLoading" class="text-center py-12">
+      <div
+        class="inline-block w-5 h-5 rounded-full border-2 animate-spin"
+        style="border-color: #2a2a40; border-top-color: #7c6af7"
+      ></div>
+    </div>
+    <div v-else-if="notes && notes.length > 0" class="space-y-3">
       <NoteCard v-for="note in notes" :key="note.id" :note="note" />
     </div>
-    <div v-else class="text-center text-gray-400 py-8">No posts yet</div>
+    <div v-else class="text-center py-16">
+      <p class="text-sm font-mono" style="color: #3a3a55">まだ投稿がありません</p>
+    </div>
   </div>
 </template>
