@@ -4,7 +4,7 @@ import { CORSPlugin } from "@orpc/server/plugins";
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import { eq, desc, and, isNull, sql, count } from "drizzle-orm";
 import { contract } from "@aihackason/contract";
-import { users, notes, likes, recommendations } from "./db/schema";
+import { users, notes, likes, recommendations, dailyRecommendState } from "./db/schema";
 import { hashSync, compareSync } from "bcrypt-ts";
 import { SignJWT, jwtVerify } from "jose";
 import { summarizeIntoThreeWords, type AiBinding } from "./threeWordSummary";
@@ -35,7 +35,7 @@ type NoteWithUserRow = {
 };
 
 const RECOMMEND_LIMIT = 3;
-const UNLOCK_THRESHOLD = 3;
+const ADMIN_USERNAMES = new Set(["mattyatea", "kasukasukun"]);
 
 // ========== JWT Helpers ==========
 
@@ -172,11 +172,8 @@ async function enrichNotes(
   }
 
   return noteRows.map((row) => {
-    const canViewContent = currentUserId === row.note.userId || row.note.isUnlocked;
-
     return {
       id: row.note.id,
-      content: canViewContent ? row.note.content : "",
       summary: row.note.summary ?? null,
       createdAt: row.note.createdAt,
       userId: row.note.userId,
@@ -186,7 +183,7 @@ async function enrichNotes(
       replyCount: replyCountMap.get(row.note.id) ?? 0,
       liked: likedSet.has(row.note.id),
       recommendCount: recommendationCountMap.get(row.note.id) ?? 0,
-      unlocked: row.note.isUnlocked,
+      recommended: row.note.isUnlocked,
     };
   });
 }
@@ -216,17 +213,44 @@ async function getRemainingRecommendations(db: DrizzleD1Database, userId: string
 }
 
 async function refreshNoteUnlockState(db: DrizzleD1Database, noteId: string) {
+  const today = new Date().toISOString().slice(0, 10);
   const [result] = await db
     .select({ count: count() })
     .from(recommendations)
-    .where(eq(recommendations.noteId, noteId));
+    .where(
+      and(eq(recommendations.noteId, noteId), sql`date(${recommendations.createdAt}) = ${today}`),
+    );
+
+  const publishedEntries = await db
+    .select({ id: dailyRecommendState.id })
+    .from(dailyRecommendState)
+    .where(eq(dailyRecommendState.noteId, noteId));
 
   const recommendCount = result.count;
-  const unlocked = recommendCount >= UNLOCK_THRESHOLD;
+  const unlocked = publishedEntries.length > 0;
 
   await db.update(notes).set({ recommendCount, isUnlocked: unlocked }).where(eq(notes.id, noteId));
 
   return { recommendCount, unlocked };
+}
+
+function getTodayDay() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getPreviousDay(day: string) {
+  const date = new Date(`${day}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - 1);
+  return date.toISOString().slice(0, 10);
+}
+
+async function requireAdmin(context: AuthContext) {
+  const [user] = await context.db.select().from(users).where(eq(users.id, context.userId));
+  if (!user || !ADMIN_USERNAMES.has(user.username)) {
+    throw new Error("Forbidden");
+  }
+
+  return user;
 }
 
 async function getDailyWinnerNote(
@@ -265,9 +289,75 @@ async function getDailyWinnerNote(
 
   return {
     ...enriched,
-    content: rows[0].note.content,
-    unlocked: true,
+    recommended: true,
   };
+}
+
+async function publishDailyRecommendForDay(
+  db: DrizzleD1Database,
+  publishedDay: string,
+  sourceDay: string,
+  manual: boolean,
+  currentUserId: string | null,
+) {
+  try {
+    const [existing] = await db
+      .select()
+      .from(dailyRecommendState)
+      .where(eq(dailyRecommendState.publishedDay, publishedDay));
+
+    if (existing) {
+      const note = existing.noteId
+        ? await getDailyWinnerNote(db, currentUserId, existing.sourceDay)
+        : null;
+      return {
+        publishedDay: existing.publishedDay,
+        sourceDay: existing.sourceDay,
+        note,
+        manual: existing.manual,
+      };
+    }
+
+    const winner = await getDailyWinnerNote(db, currentUserId, sourceDay);
+
+    await db.insert(dailyRecommendState).values({
+      id: crypto.randomUUID(),
+      publishedDay,
+      sourceDay,
+      noteId: winner?.id ?? null,
+      manual,
+    });
+
+    if (winner) {
+      await db.update(notes).set({ isUnlocked: true }).where(eq(notes.id, winner.id));
+      await refreshNoteUnlockState(db, winner.id);
+    }
+
+    return {
+      publishedDay,
+      sourceDay,
+      note: winner,
+      manual,
+    };
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("no such table: daily_recommend_state")) {
+      const winner = await getDailyWinnerNote(db, currentUserId, sourceDay);
+
+      if (winner) {
+        await db.update(notes).set({ isUnlocked: true }).where(eq(notes.id, winner.id));
+        await refreshNoteUnlockState(db, winner.id);
+      }
+
+      return {
+        publishedDay,
+        sourceDay,
+        note: winner,
+        manual,
+      };
+    }
+
+    throw error;
+  }
 }
 
 // ========== Implementation ==========
@@ -351,12 +441,14 @@ const createNote = os.note.create.handler(async ({ input, context }) => {
   }
 
   const id = crypto.randomUUID();
+  const generatedSummary = await summarizeIntoThreeWords(auth.ai, input.content);
   const insertedNotes = await auth.db
     .insert(notes)
     .values({
       id,
       userId: auth.userId,
       content: input.content,
+      summary: generatedSummary.summary,
       replyTo: input.replyTo ?? null,
       recommendCount: 0,
       isUnlocked: false,
@@ -511,13 +603,40 @@ const topRecommended = os.note.topRecommended.handler(async ({ input, context })
 const dailyWinner = os.note.dailyWinner.handler(async ({ context }) => {
   const ctx = context as Context;
   const currentUserId = await optionalAuth(ctx);
-  const day = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const note = await getDailyWinnerNote(ctx.db, currentUserId, day);
+  const publishedDay = getTodayDay();
+  const sourceDay = getPreviousDay(publishedDay);
+  const published = await publishDailyRecommendForDay(
+    ctx.db,
+    publishedDay,
+    sourceDay,
+    false,
+    currentUserId,
+  );
 
   return {
-    day,
-    note,
+    publishedDay: published.publishedDay,
+    sourceDay: published.sourceDay,
+    note: published.note,
+    manual: published.manual,
   };
+});
+
+const publishDailyRecommend = os.note.publishDailyRecommend.handler(async ({ input, context }) => {
+  const ctx = context as Context;
+  const auth = await requireAuth(ctx, ctx.headers);
+  await requireAdmin(auth);
+
+  const publishedDay = getTodayDay();
+  const sourceDay = input.sourceDay ?? publishedDay;
+  const published = await publishDailyRecommendForDay(
+    auth.db,
+    publishedDay,
+    sourceDay,
+    true,
+    auth.userId,
+  );
+
+  return published;
 });
 
 // --- Likes ---
@@ -706,6 +825,7 @@ const router = os.router({
     replies: noteReplies,
     topRecommended,
     dailyWinner,
+    publishDailyRecommend,
   },
   like: {
     toggle: likeToggle,

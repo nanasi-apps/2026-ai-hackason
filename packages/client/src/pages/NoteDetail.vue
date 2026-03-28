@@ -58,6 +58,9 @@ function handleReply() {
     <div v-else-if="note">
       <!-- Note card -->
       <NoteCard :note="note" :full="true" />
+      <p class="mt-4 text-sm leading-6 text-gray-600">
+        この画面でも原文は取得せず、3単語の誤読と返信だけを表示します。
+      </p>
 
       <!-- Reply form -->
       <div

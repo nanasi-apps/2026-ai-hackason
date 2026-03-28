@@ -33,7 +33,7 @@ function handleLogout() {
               letter-spacing: 0.2em;
             "
           >
-            MISREADER
+            今北産業SNS
           </span>
         </RouterLink>
 
@@ -49,6 +49,16 @@ function handleLogout() {
             おすすめ
           </RouterLink>
           <template v-if="isLoggedIn">
+            <RouterLink
+              v-if="user && ['mattyatea', 'kasukasukun'].includes(user.username)"
+              to="/admin/recommend"
+              class="text-sm transition-colors"
+              style="color: #6b6b8a"
+              onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+              onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
+            >
+              管理
+            </RouterLink>
             <RouterLink
               :to="`/user/${user?.username}`"
               class="text-sm transition-colors px-3 py-1.5 rounded-full"
@@ -97,7 +107,7 @@ function handleLogout() {
 
     <!-- Footer -->
     <footer class="text-center py-8 text-xs" style="color: #3a3a55">
-      MISREADER — あなたの言葉を、AIが盛大に誤読する
+      今北産業SNS — あなたの言葉を、AIが盛大に誤読する
     </footer>
   </div>
 </template>

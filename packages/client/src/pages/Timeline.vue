@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/vue-query";
-import { orpc, client } from "../lib/orpc";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
+import { client, orpc } from "../lib/orpc";
 import { useAuth } from "../composables/useAuth";
 import NoteCard from "../components/NoteCard.vue";
 
@@ -12,9 +12,13 @@ const content = ref("");
 const postError = ref("");
 
 const { data: notes, isLoading } = useQuery(orpc.note.list.queryOptions({ input: { limit: 50 } }));
+const { data: myRecommendations } = useQuery({
+  ...orpc.recommend.listMine.queryOptions(),
+  enabled: isLoggedIn,
+});
 
 const createMutation = useMutation({
-  mutationFn: (content: string) => client.note.create({ content }),
+  mutationFn: (value: string) => client.note.create({ content: value }),
   onSuccess: () => {
     content.value = "";
     postError.value = "";
@@ -40,31 +44,53 @@ const charColor = () => {
 
 <template>
   <div>
-    <!-- Hero text -->
-    <div class="mb-8 text-center">
-      <p class="text-sm font-mono tracking-widest uppercase" style="color: #3a3a55">
-        あなたの言葉を、AIが盛大に誤読する
-      </p>
-    </div>
+    <section
+      class="mb-8 rounded-2xl border p-5"
+      style="
+        background: linear-gradient(135deg, #12121a 0%, #171728 60%, #12121a 100%);
+        border-color: #2a2a40;
+      "
+    >
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs font-mono tracking-[0.28em] uppercase" style="color: #6b6b8a">
+            AI MISREAD
+          </p>
+          <h1 class="mt-2 text-2xl font-semibold leading-tight" style="color: #e8e8f0">
+            長く書ける。タイムラインには 3 語だけ残る。
+          </h1>
+          <p class="mt-3 text-sm leading-6" style="color: #6b6b8a">
+            投稿は AI が誤読して 3 単語に変換。推薦は 1
+            日ごとに集計され、いちばん推された投稿が翌日に
+            <RouterLink to="/recommend" class="underline" style="color: #a99af9"
+              >Daily Recommend</RouterLink
+            >
+            に出ます。
+          </p>
+        </div>
+        <p v-if="isLoggedIn && myRecommendations" class="text-xs font-mono" style="color: #f59e0b">
+          今日の残り推薦 {{ myRecommendations.remainingCount }}
+        </p>
+      </div>
+    </section>
 
-    <!-- Post form -->
     <div
       v-if="isLoggedIn"
-      class="rounded-xl border mb-8 overflow-hidden"
+      class="mb-8 overflow-hidden rounded-xl border"
       style="background-color: #12121a; border-color: #2a2a40"
     >
       <div class="px-4 pt-4 pb-3">
         <textarea
           v-model="content"
           rows="4"
-          class="w-full resize-none focus:outline-none text-sm leading-relaxed bg-transparent"
+          class="w-full resize-none bg-transparent text-sm leading-relaxed focus:outline-none"
           style="color: #e8e8f0; caret-color: #a99af9"
-          placeholder="何でも書いてください。AIが盛大に誤読します。"
+          placeholder="何でも書いてください。AI が盛大に誤読します。"
           :maxlength="charLimit"
         />
       </div>
       <div
-        class="flex items-center justify-between px-4 py-3 border-t"
+        class="flex items-center justify-between border-t px-4 py-3"
         style="border-color: #2a2a4060"
       >
         <div class="flex items-center gap-3">
@@ -76,7 +102,7 @@ const charColor = () => {
         <button
           @click="handlePost"
           :disabled="!content.trim() || createMutation.isPending.value"
-          class="px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-150 disabled:opacity-40"
+          class="rounded-full px-5 py-1.5 text-sm font-medium transition-all duration-150 disabled:opacity-40"
           style="background: linear-gradient(135deg, #7c6af7 0%, #e85d9a 100%); color: white"
         >
           {{ createMutation.isPending.value ? "投稿中..." : "投稿" }}
@@ -84,13 +110,12 @@ const charColor = () => {
       </div>
     </div>
 
-    <!-- Login prompt -->
     <div
       v-else
-      class="rounded-xl border mb-8 p-6 text-center"
+      class="mb-8 rounded-xl border p-6 text-center"
       style="background-color: #12121a; border-color: #2a2a40"
     >
-      <p class="text-sm mb-3" style="color: #6b6b8a">
+      <p class="mb-3 text-sm" style="color: #6b6b8a">
         投稿するには
         <RouterLink
           to="/login"
@@ -105,7 +130,7 @@ const charColor = () => {
       <div class="flex justify-center gap-3">
         <RouterLink
           to="/login"
-          class="px-4 py-1.5 rounded-full text-sm transition-colors"
+          class="rounded-full px-4 py-1.5 text-sm transition-colors"
           style="border: 1px solid #2a2a40; color: #6b6b8a"
           onmouseover="this.style.borderColor = &quot;#7c6af7&quot;;
           this.style.color = &quot;#a99af9&quot;;"
@@ -115,32 +140,30 @@ const charColor = () => {
         >
         <RouterLink
           to="/register"
-          class="px-4 py-1.5 rounded-full text-sm font-medium"
+          class="rounded-full px-4 py-1.5 text-sm font-medium"
           style="background: linear-gradient(135deg, #7c6af7 0%, #e85d9a 100%); color: white"
           >新規登録</RouterLink
         >
       </div>
     </div>
 
-    <!-- Timeline label -->
-    <div class="flex items-center gap-3 mb-4">
+    <div class="mb-4 flex items-center gap-3">
       <span class="text-xs font-mono tracking-widest uppercase" style="color: #3a3a55"
         >タイムライン</span
       >
-      <div class="flex-1 h-px" style="background-color: #2a2a40"></div>
+      <div class="h-px flex-1" style="background-color: #2a2a40"></div>
     </div>
 
-    <!-- Notes -->
-    <div v-if="isLoading" class="text-center py-12">
+    <div v-if="isLoading" class="py-12 text-center">
       <div
-        class="inline-block w-5 h-5 rounded-full border-2 animate-spin"
+        class="inline-block h-5 w-5 rounded-full border-2 animate-spin"
         style="border-color: #2a2a40; border-top-color: #7c6af7"
       ></div>
     </div>
     <div v-else-if="notes && notes.length > 0" class="space-y-3">
       <NoteCard v-for="note in notes" :key="note.id" :note="note" />
     </div>
-    <div v-else class="text-center py-16">
+    <div v-else class="py-16 text-center">
       <p class="text-sm font-mono" style="color: #3a3a55">まだ投稿がありません</p>
     </div>
   </div>

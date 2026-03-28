@@ -10,7 +10,7 @@
     "db:generate": "pnpm -F @aihackason/server db:generate",
     "db:migrate:local": "pnpm -F @aihackason/server db:migrate:local",
     "db:migrate:remote": "pnpm -F @aihackason/server db:migrate:remote",
-    "deploy": "pnpm build:client && pnpm -F @aihackason/server deploy",
+    "deploy": "pnpm build:client && pnpm -F @aihackason/server run deploy",
     "lint": "oxlint --deny-warnings .",
     "fmt": "oxfmt --write .",
     "fmt:check": "oxfmt --check .",
