@@ -5,7 +5,7 @@
   "scripts": {
     "dev:server": "pnpm -F @aihackason/server dev",
     "dev:client": "pnpm -F @aihackason/client dev",
-    "dev": "pnpm dev:server & pnpm dev:client",
+    "dev": "concurrently -n server,client -c blue,green \"pnpm dev:server\" \"pnpm dev:client\"",
     "build:client": "pnpm -F @aihackason/client build",
     "db:generate": "pnpm -F @aihackason/server db:generate",
     "db:migrate:local": "pnpm -F @aihackason/server db:migrate:local",
@@ -16,6 +16,7 @@
     "fmt:check": "oxfmt --check ."
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "oxfmt": "^0.42.0",
     "oxlint": "^1.57.0"
   },

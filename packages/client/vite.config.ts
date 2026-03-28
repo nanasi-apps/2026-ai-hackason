@@ -5,8 +5,12 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
   server: {
+    port: 5173,
     proxy: {
-      "/rpc": "http://localhost:8787",
+      "/rpc": {
+        target: "http://localhost:8787",
+        changeOrigin: true,
+      },
     },
   },
 });

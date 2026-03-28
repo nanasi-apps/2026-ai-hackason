@@ -1,7 +1,14 @@
 name = "aihackason-api"
 main = "src/index.ts"
 compatibility_date = "2024-12-30"
+account_id = "249ffe1ec04083daee0b2148ea5c8416"
+
+# Production: serve client static assets
+# Dev: Vite dev server handles frontend, wrangler is API only
 assets = { directory = "../client/dist", binding = "ASSETS" }
+
+[vars]
+JWT_SECRET = "dev-secret-change-in-production"
 
 [[d1_databases]]
 binding = "DB"

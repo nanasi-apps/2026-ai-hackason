@@ -6,7 +6,7 @@ import type { contract } from "@aihackason/contract";
 import { useAuth } from "../composables/useAuth";
 
 const link = new RPCLink({
-  url: "/rpc",
+  url: `${window.location.origin}/rpc`,
   headers: () => {
     const { token } = useAuth();
     if (token.value) {
