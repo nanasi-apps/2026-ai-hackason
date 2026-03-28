@@ -158,11 +158,11 @@ function formatDate(dateStr: string) {
 <template>
   <article
     class="overflow-hidden rounded-xl border transition-all duration-200 animate-fade-up"
-    style="background-color: #12121a; border-color: #2a2a40"
+    style="background-color: #15151f; border-color: #252538"
     :class="
       props.full
         ? ''
-        : 'cursor-pointer hover:border-[#3a3a55] focus:outline-none focus:ring-1 focus:ring-[#7c6af7]'
+        : 'cursor-pointer hover:border-[#383852] focus:outline-none focus:ring-1 focus:ring-[#8b7cf8]'
     "
     :tabindex="props.full ? undefined : 0"
     :role="props.full ? undefined : 'link'"
@@ -174,16 +174,16 @@ function formatDate(dateStr: string) {
       <div class="flex items-center gap-2">
         <div
           class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold"
-          style="background: linear-gradient(135deg, #7c6af7 0%, #e85d9a 100%); color: white"
+          style="background: linear-gradient(135deg, #8b7cf8 0%, #ec6fac 100%); color: white"
         >
           {{ note.author.username.charAt(0).toUpperCase() }}
         </div>
         <RouterLink
           :to="`/user/${note.author.username}`"
           class="text-sm font-semibold transition-colors"
-          style="color: #a99af9"
-          onmouseover="this.style.color = &quot;#ffffff&quot;;"
-          onmouseout="this.style.color = &quot;#a99af9&quot;;"
+          style="color: #b8acfa"
+          onmouseover="this.style.color = &quot;#f0f0f8&quot;;"
+          onmouseout="this.style.color = &quot;#b8acfa&quot;;"
           @click.stop
         >
           @{{ note.author.username }}
@@ -191,13 +191,13 @@ function formatDate(dateStr: string) {
       </div>
 
       <div class="flex items-center gap-2">
-        <div v-if="note.replyTo" class="text-xs" style="color: #fff">
+        <div v-if="note.replyTo" class="text-xs" style="color: #f0f0f8">
           <RouterLink
             :to="`/${note.replyTo}`"
             class="transition-colors"
-            style="color: #fff"
-            onmouseover="this.style.color = &quot;#fff&quot;;"
-            onmouseout="this.style.color = &quot;#fff&quot;;"
+            style="color: #f0f0f8"
+            onmouseover="this.style.color = &quot;#f0f0f8&quot;;"
+            onmouseout="this.style.color = &quot;#f0f0f8&quot;;"
             @click.stop
           >
             ↩ 返信
@@ -206,9 +206,9 @@ function formatDate(dateStr: string) {
         <RouterLink
           :to="`/${note.id}`"
           class="text-xs font-mono transition-colors"
-          style="color: #fff"
-          onmouseover="this.style.color = &quot;#fff&quot;;"
-          onmouseout="this.style.color = &quot;#fff&quot;;"
+          style="color: #f0f0f8"
+          onmouseover="this.style.color = &quot;#f0f0f8&quot;;"
+          onmouseout="this.style.color = &quot;#f0f0f8&quot;;"
           @click.stop
         >
           {{ formatDate(note.createdAt) }}
@@ -219,9 +219,9 @@ function formatDate(dateStr: string) {
           @click="handleDelete"
           :disabled="deleteMutation.isPending.value"
           class="rounded-full border px-3 py-1 text-xs font-medium transition-all disabled:opacity-50"
-          style="border-color: #e85d9a66; background-color: #e85d9a14; color: #e85d9a"
-          onmouseover="this.style.backgroundColor = &quot;#e85d9a22&quot;;"
-          onmouseout="this.style.backgroundColor = &quot;#e85d9a14&quot;;"
+          style="border-color: #ec6fac66; background-color: #ec6fac14; color: #ec6fac"
+          onmouseover="this.style.backgroundColor = &quot;#ec6fac22&quot;;"
+          onmouseout="this.style.backgroundColor = &quot;#ec6fac14&quot;;"
           @click.stop
         >
           {{ deleteMutation.isPending.value ? "削除中..." : "削除" }}
@@ -229,35 +229,35 @@ function formatDate(dateStr: string) {
       </div>
     </div>
 
-    <div class="border-b border-t px-5 pt-3 pb-3" style="border-color: #2a2a4080">
+    <div class="border-b border-t px-5 pt-3 pb-3" style="border-color: #25253850">
       <div class="flex flex-col gap-0.5">
         <span
           v-for="(line, i) in summaryLines"
           :key="`${note.id}-${i}`"
           class="text-sm font-medium leading-relaxed"
-          style="font-family: &quot;Space Mono&quot;, monospace; color: #fff"
+          style="font-family: &quot;Space Mono&quot;, monospace; color: #f0f0f8"
           >{{ line }}</span
         >
       </div>
     </div>
 
     <div v-if="props.full && note.content" class="px-5 py-4">
-      <div class="text-xs mb-2" style="color: #7c6af7">原文</div>
-      <p class="whitespace-pre-wrap text-sm leading-7" style="color: #fff">
+      <div class="text-xs mb-2" style="color: #8b7cf8">原文</div>
+      <p class="whitespace-pre-wrap text-sm leading-7" style="color: #f0f0f8">
         {{ note.content }}
       </p>
     </div>
 
     <!-- Action bar -->
-    <div class="flex items-center gap-6 border-t px-5 py-3" style="border-color: #2a2a4060">
+    <div class="flex items-center gap-6 border-t px-5 py-3" style="border-color: #25253840">
       <button
         type="button"
         @click="handleLike"
         :disabled="!isLoggedIn"
         class="flex items-center gap-2 transition-all duration-150 px-2 py-1.5 rounded-lg"
-        :style="localLiked ? 'color: #e85d9a;' : 'color: #fff;'"
-        :onmouseover="isLoggedIn ? 'this.style.color=\'#e85d9a\'' : ''"
-        :onmouseout="localLiked ? 'this.style.color=\'#e85d9a\'' : 'this.style.color=\'#fff\''"
+        :style="localLiked ? 'color: #ec6fac;' : 'color: #f0f0f8;'"
+        :onmouseover="isLoggedIn ? 'this.style.color=\'#ec6fac\'' : ''"
+        :onmouseout="localLiked ? 'this.style.color=\'#ec6fac\'' : 'this.style.color=\'#f0f0f8\''"
         @click.stop
       >
         <svg
@@ -280,9 +280,9 @@ function formatDate(dateStr: string) {
       <RouterLink
         :to="`/${note.id}`"
         class="flex items-center gap-2 transition-colors px-2 py-1.5 rounded-lg"
-        style="color: #fff"
-        onmouseover="this.style.color = &quot;#7c6af7&quot;;"
-        onmouseout="this.style.color = &quot;#fff&quot;;"
+        style="color: #f0f0f8"
+        onmouseover="this.style.color = &quot;#8b7cf8&quot;;"
+        onmouseout="this.style.color = &quot;#f0f0f8&quot;;"
         @click.stop
       >
         <svg
@@ -309,14 +309,14 @@ function formatDate(dateStr: string) {
           !isLoggedIn || remainingRecommendationCount <= 0 || recommendMutation.isPending.value
         "
         class="flex items-center gap-2 transition-all duration-150 disabled:opacity-40 px-2 py-1.5 rounded-lg"
-        :style="recommendationCountForNote > 0 ? 'color: #f59e0b;' : 'color: #fff;'"
+        :style="recommendationCountForNote > 0 ? 'color: #f59e0b;' : 'color: #f0f0f8;'"
         :onmouseover="
           isLoggedIn && remainingRecommendationCount > 0 ? 'this.style.color=\'#f59e0b\'' : ''
         "
         :onmouseout="
           recommendationCountForNote > 0
             ? 'this.style.color=\'#f59e0b\''
-            : 'this.style.color=\'#fff\''
+            : 'this.style.color=\'#f0f0f8\''
         "
         @click.stop
       >

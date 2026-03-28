@@ -46,13 +46,13 @@ function handleReply() {
     <div v-if="isLoading" class="text-center py-16">
       <div
         class="inline-block w-5 h-5 rounded-full border-2 animate-spin"
-        style="border-color: #2a2a40; border-top-color: #7c6af7"
+        style="border-color: #252538; border-top-color: #8b7cf8"
       ></div>
     </div>
 
     <!-- Error -->
     <div v-else-if="error" class="text-center py-12">
-      <p class="text-sm font-mono" style="color: #e85d9a">{{ error.message }}</p>
+      <p class="text-sm font-mono" style="color: #ec6fac">{{ error.message }}</p>
     </div>
 
     <div v-else-if="note">
@@ -63,8 +63,8 @@ function handleReply() {
       <div class="flex mt-2">
         <!-- Left connector: vertical line + ┗ hook -->
         <div class="flex flex-col items-center mr-3" style="width: 24px; padding-top: 2px">
-          <div class="flex-1 w-px" style="background-color: #2a2a40; min-height: 16px"></div>
-          <span class="text-xs leading-none select-none" style="color: #fff">┗</span>
+          <div class="flex-1 w-px" style="background-color: #252538; min-height: 16px"></div>
+          <span class="text-xs leading-none select-none" style="color: #f0f0f8">┗</span>
         </div>
 
         <!-- Reply form or login prompt -->
@@ -72,14 +72,14 @@ function handleReply() {
           <div
             v-if="isLoggedIn"
             class="rounded-xl border overflow-hidden"
-            style="background-color: #12121a; border-color: #2a2a40"
+            style="background-color: #15151f; border-color: #252538"
           >
             <div class="flex items-center gap-3 px-4 py-2">
               <textarea
                 v-model="replyContent"
                 rows="1"
                 class="flex-1 resize-none focus:outline-none text-sm leading-relaxed bg-transparent"
-                style="color: #ffffff; caret-color: #a99af9; max-height: 120px; overflow-y: auto"
+                style="color: #f0f0f8; caret-color: #b8acfa; max-height: 120px; overflow-y: auto"
                 placeholder="返信を書く..."
                 @input="
                   ($event.target as HTMLTextAreaElement).style.height = 'auto';
@@ -88,10 +88,10 @@ function handleReply() {
                 "
               />
               <div class="flex items-center gap-2 flex-shrink-0">
-                <span v-if="replyError" class="text-xs" style="color: #e85d9a">{{
+                <span v-if="replyError" class="text-xs" style="color: #ec6fac">{{
                   replyError
                 }}</span>
-                <span v-else class="text-xs font-mono" style="color: #fff">{{
+                <span v-else class="text-xs font-mono" style="color: #f0f0f8">{{
                   replyContent.length || ""
                 }}</span>
                 <button
@@ -99,7 +99,7 @@ function handleReply() {
                   :disabled="!replyContent.trim() || replyMutation.isPending.value"
                   class="px-4 py-1 rounded-full text-xs font-medium transition-all disabled:opacity-40"
                   style="
-                    background: linear-gradient(135deg, #7c6af7 0%, #e85d9a 100%);
+                    background: linear-gradient(135deg, #8b7cf8 0%, #ec6fac 100%);
                     color: white;
                   "
                 >
@@ -110,12 +110,12 @@ function handleReply() {
           </div>
 
           <div v-else class="py-1">
-            <p class="text-xs" style="color: #fff">
+            <p class="text-xs" style="color: #f0f0f8">
               <RouterLink
                 to="/login"
-                style="color: #a99af9"
-                onmouseover="this.style.color = &quot;#ffffff&quot;;"
-                onmouseout="this.style.color = &quot;#a99af9&quot;;"
+                style="color: #b8acfa"
+                onmouseover="this.style.color = &quot;#f0f0f8&quot;;"
+                onmouseout="this.style.color = &quot;#b8acfa&quot;;"
                 >ログイン</RouterLink
               >
               して返信する
@@ -127,24 +127,24 @@ function handleReply() {
       <!-- Replies section -->
       <div class="mt-5">
         <div class="flex items-center gap-3 mb-3">
-          <span class="text-xs font-mono tracking-widest uppercase" style="color: #fff">
+          <span class="text-xs font-mono tracking-widest uppercase" style="color: #f0f0f8">
             返信 ({{ note.replyCount }})
           </span>
-          <div class="flex-1 h-px" style="background-color: #2a2a40"></div>
+          <div class="flex-1 h-px" style="background-color: #252538"></div>
         </div>
 
         <div v-if="repliesLoading" class="text-center py-8">
           <div
             class="inline-block w-4 h-4 rounded-full border-2 animate-spin"
-            style="border-color: #2a2a40; border-top-color: #7c6af7"
+            style="border-color: #252538; border-top-color: #8b7cf8"
           ></div>
         </div>
         <!-- Each reply indented with ┗ connector -->
         <div v-else-if="replies && replies.length > 0" class="space-y-2">
           <div v-for="reply in replies" :key="reply.id" class="flex">
             <div class="flex flex-col items-center mr-3" style="width: 24px; padding-top: 2px">
-              <div class="flex-1 w-px" style="background-color: #2a2a40; min-height: 16px"></div>
-              <span class="text-xs leading-none select-none" style="color: #fff">┗</span>
+              <div class="flex-1 w-px" style="background-color: #252538; min-height: 16px"></div>
+              <span class="text-xs leading-none select-none" style="color: #f0f0f8">┗</span>
             </div>
             <div class="flex-1">
               <NoteCard :note="reply" />
@@ -152,7 +152,7 @@ function handleReply() {
           </div>
         </div>
         <div v-else class="text-center py-8">
-          <p class="text-sm font-mono" style="color: #fff">まだ返信がありません</p>
+          <p class="text-sm font-mono" style="color: #f0f0f8">まだ返信がありません</p>
         </div>
       </div>
     </div>
