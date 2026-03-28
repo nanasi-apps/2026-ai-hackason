@@ -16,5 +16,6 @@ binding = "AI"
 [[d1_databases]]
 binding = "DB"
 database_name = "aihackason-db"
-database_id = "placeholder-id"
+database_id = "1f1af7d1-696e-497e-acba-f65240077807"
+preview_database_id = "1f1af7d1-696e-497e-acba-f65240077807"
 migrations_dir = "drizzle"
