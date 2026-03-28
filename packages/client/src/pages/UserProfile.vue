@@ -22,7 +22,7 @@ const { data: notes, isLoading } = useQuery(
           {{ username.charAt(0).toUpperCase() }}
         </div>
         <div>
-          <h1 class="text-lg font-bold" style="color: #e8e8f0">@{{ username }}</h1>
+          <h1 class="text-lg font-bold" style="color: #ffffff">@{{ username }}</h1>
           <p class="text-xs font-mono mt-0.5" style="color: #3a3a55">
             {{ notes ? notes.length : "..." }} 件の投稿
           </p>

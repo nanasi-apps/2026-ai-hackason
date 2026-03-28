@@ -66,7 +66,7 @@ async function handleRegister() {
             type="text"
             required
             class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none transition-colors bg-transparent"
-            style="border: 1px solid #2a2a40; color: #e8e8f0; caret-color: #a99af9"
+            style="border: 1px solid #2a2a40; color: #ffffff; caret-color: #a99af9"
             onfocus="this.style.borderColor = &quot;#7c6af7&quot;;"
             onblur="this.style.borderColor = &quot;#2a2a40&quot;;"
             placeholder="3〜20文字 (a-z, 0-9, _)"
@@ -85,7 +85,7 @@ async function handleRegister() {
             required
             minlength="6"
             class="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none transition-colors bg-transparent"
-            style="border: 1px solid #2a2a40; color: #e8e8f0; caret-color: #a99af9"
+            style="border: 1px solid #2a2a40; color: #ffffff; caret-color: #a99af9"
             onfocus="this.style.borderColor = &quot;#7c6af7&quot;;"
             onblur="this.style.borderColor = &quot;#2a2a40&quot;;"
             placeholder="6文字以上"
@@ -117,7 +117,7 @@ async function handleRegister() {
         to="/login"
         class="transition-colors"
         style="color: #a99af9"
-        onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+        onmouseover="this.style.color = &quot;#ffffff&quot;;"
         onmouseout="this.style.color = &quot;#a99af9&quot;;"
         >ログイン</RouterLink
       >

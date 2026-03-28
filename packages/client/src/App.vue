@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { RouterView, RouterLink } from "vue-router";
 import { useAuth } from "./composables/useAuth";
+import { useToast } from "./composables/useToast";
 import { useRouter } from "vue-router";
 
 const { isLoggedIn, user, logout } = useAuth();
+const { toasts, dismiss } = useToast();
 const router = useRouter();
 
 function handleLogout() {
@@ -13,7 +15,7 @@ function handleLogout() {
 </script>
 
 <template>
-  <div class="min-h-screen" style="background-color: #0a0a0f; color: #e8e8f0">
+  <div class="min-h-screen" style="background-color: #0a0a0f; color: #ffffff">
     <!-- Header -->
     <header
       class="sticky top-0 z-10 border-b"
@@ -26,10 +28,7 @@ function handleLogout() {
             class="text-lg font-bold tracking-widest uppercase"
             style="
               font-family: &quot;Space Mono&quot;, monospace;
-              background: linear-gradient(135deg, #a99af9 0%, #e85d9a 100%);
-              -webkit-background-clip: text;
-              -webkit-text-fill-color: transparent;
-              background-clip: text;
+              color: #ffffff;
               letter-spacing: 0.2em;
             "
           >
@@ -43,7 +42,7 @@ function handleLogout() {
             to="/recommend"
             class="text-sm transition-colors"
             style="color: #6b6b8a"
-            onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+            onmouseover="this.style.color = &quot;#ffffff&quot;;"
             onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
           >
             おすすめ
@@ -72,7 +71,7 @@ function handleLogout() {
               @click="handleLogout"
               class="text-sm transition-colors px-3 py-1.5 rounded-full"
               style="color: #6b6b8a"
-              onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+              onmouseover="this.style.color = &quot;#ffffff&quot;;"
               onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
             >
               ログアウト
@@ -83,7 +82,7 @@ function handleLogout() {
               to="/login"
               class="text-sm transition-colors"
               style="color: #6b6b8a"
-              onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+              onmouseover="this.style.color = &quot;#ffffff&quot;;"
               onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
             >
               ログイン
@@ -111,5 +110,28 @@ function handleLogout() {
       <span class="block">AIが 3 行に削る。</span>
       <span class="block">残った言葉が、あなたの全部だ。</span>
     </footer>
+
+    <!-- Toast container -->
+    <div
+      class="fixed bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none"
+    >
+      <TransitionGroup name="toast">
+        <div
+          v-for="t in toasts"
+          :key="t.id"
+          class="pointer-events-auto flex items-center gap-3 rounded-full px-5 py-2.5 text-sm font-mono shadow-lg cursor-pointer"
+          :style="
+            t.type === 'error'
+              ? 'background-color: #2a1020; border: 1px solid #e85d9a60; color: #e85d9a'
+              : t.type === 'success'
+                ? 'background-color: #0f2a1a; border: 1px solid #4ade8060; color: #4ade80'
+                : 'background-color: #1a1a2e; border: 1px solid #7c6af760; color: #a99af9'
+          "
+          @click="dismiss(t.id)"
+        >
+          {{ t.message }}
+        </div>
+      </TransitionGroup>
+    </div>
   </div>
 </template>

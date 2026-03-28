@@ -58,66 +58,75 @@ function handleReply() {
     <div v-else-if="note">
       <!-- Note card -->
       <NoteCard :note="note" :full="true" />
-      <p class="mt-4 text-sm leading-6 text-gray-600">
-        この画面でも原文は取得せず、3単語の誤読と返信だけを表示します。
-      </p>
 
-      <!-- Reply form -->
-      <div
-        v-if="isLoggedIn"
-        class="rounded-xl border mt-4 overflow-hidden"
-        style="background-color: #12121a; border-color: #2a2a40"
-      >
-        <div class="px-4 pt-3 pb-2">
-          <p class="text-xs font-mono tracking-wider uppercase mb-2" style="color: #3a3a55">返信</p>
-          <textarea
-            v-model="replyContent"
-            rows="3"
-            class="w-full resize-none focus:outline-none text-sm leading-relaxed bg-transparent"
-            style="color: #e8e8f0; caret-color: #a99af9"
-            placeholder="返信を書く..."
-          />
+      <!-- Thread line + reply form -->
+      <div class="flex mt-2">
+        <!-- Left connector: vertical line + ┗ hook -->
+        <div class="flex flex-col items-center mr-3" style="width: 24px; padding-top: 2px">
+          <div class="flex-1 w-px" style="background-color: #2a2a40; min-height: 16px"></div>
+          <span class="text-xs leading-none select-none" style="color: #3a3a55">┗</span>
         </div>
-        <div
-          class="flex items-center justify-between px-4 py-3 border-t"
-          style="border-color: #2a2a4060"
-        >
-          <p v-if="replyError" class="text-xs" style="color: #e85d9a">{{ replyError }}</p>
-          <span v-else class="text-xs font-mono" style="color: #3a3a55">{{
-            replyContent.length
-          }}</span>
-          <button
-            @click="handleReply"
-            :disabled="!replyContent.trim() || replyMutation.isPending.value"
-            class="px-5 py-1.5 rounded-full text-sm font-medium transition-all disabled:opacity-40"
-            style="background: linear-gradient(135deg, #7c6af7 0%, #e85d9a 100%); color: white"
-          >
-            {{ replyMutation.isPending.value ? "送信中..." : "返信する" }}
-          </button>
-        </div>
-      </div>
 
-      <!-- Login prompt -->
-      <div
-        v-else
-        class="rounded-xl border mt-4 p-5 text-center"
-        style="background-color: #12121a; border-color: #2a2a40"
-      >
-        <p class="text-sm" style="color: #6b6b8a">
-          <RouterLink
-            to="/login"
-            style="color: #a99af9"
-            onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
-            onmouseout="this.style.color = &quot;#a99af9&quot;;"
-            >ログイン</RouterLink
+        <!-- Reply form or login prompt -->
+        <div class="flex-1">
+          <div
+            v-if="isLoggedIn"
+            class="rounded-xl border overflow-hidden"
+            style="background-color: #12121a; border-color: #2a2a40"
           >
-          して返信する
-        </p>
+            <div class="flex items-center gap-3 px-4 py-2">
+              <textarea
+                v-model="replyContent"
+                rows="1"
+                class="flex-1 resize-none focus:outline-none text-sm leading-relaxed bg-transparent"
+                style="color: #ffffff; caret-color: #a99af9; max-height: 120px; overflow-y: auto"
+                placeholder="返信を書く..."
+                @input="
+                  ($event.target as HTMLTextAreaElement).style.height = 'auto';
+                  ($event.target as HTMLTextAreaElement).style.height =
+                    ($event.target as HTMLTextAreaElement).scrollHeight + 'px';
+                "
+              />
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <span v-if="replyError" class="text-xs" style="color: #e85d9a">{{
+                  replyError
+                }}</span>
+                <span v-else class="text-xs font-mono" style="color: #3a3a55">{{
+                  replyContent.length || ""
+                }}</span>
+                <button
+                  @click="handleReply"
+                  :disabled="!replyContent.trim() || replyMutation.isPending.value"
+                  class="px-4 py-1 rounded-full text-xs font-medium transition-all disabled:opacity-40"
+                  style="
+                    background: linear-gradient(135deg, #7c6af7 0%, #e85d9a 100%);
+                    color: white;
+                  "
+                >
+                  {{ replyMutation.isPending.value ? "送信中..." : "返信" }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="py-1">
+            <p class="text-xs" style="color: #3a3a55">
+              <RouterLink
+                to="/login"
+                style="color: #a99af9"
+                onmouseover="this.style.color = &quot;#ffffff&quot;;"
+                onmouseout="this.style.color = &quot;#a99af9&quot;;"
+                >ログイン</RouterLink
+              >
+              して返信する
+            </p>
+          </div>
+        </div>
       </div>
 
       <!-- Replies section -->
-      <div class="mt-6">
-        <div class="flex items-center gap-3 mb-4">
+      <div class="mt-5">
+        <div class="flex items-center gap-3 mb-3">
           <span class="text-xs font-mono tracking-widest uppercase" style="color: #3a3a55">
             返信 ({{ note.replyCount }})
           </span>
@@ -130,8 +139,17 @@ function handleReply() {
             style="border-color: #2a2a40; border-top-color: #7c6af7"
           ></div>
         </div>
-        <div v-else-if="replies && replies.length > 0" class="space-y-3">
-          <NoteCard v-for="reply in replies" :key="reply.id" :note="reply" />
+        <!-- Each reply indented with ┗ connector -->
+        <div v-else-if="replies && replies.length > 0" class="space-y-2">
+          <div v-for="reply in replies" :key="reply.id" class="flex">
+            <div class="flex flex-col items-center mr-3" style="width: 24px; padding-top: 2px">
+              <div class="flex-1 w-px" style="background-color: #2a2a40; min-height: 16px"></div>
+              <span class="text-xs leading-none select-none" style="color: #3a3a55">┗</span>
+            </div>
+            <div class="flex-1">
+              <NoteCard :note="reply" />
+            </div>
+          </div>
         </div>
         <div v-else class="text-center py-8">
           <p class="text-sm font-mono" style="color: #3a3a55">まだ返信がありません</p>

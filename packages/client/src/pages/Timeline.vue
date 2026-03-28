@@ -51,6 +51,35 @@ const charColor = () => {
 
 <template>
   <div>
+    <section
+      class="mb-8 rounded-2xl border p-5"
+      style="
+        background: linear-gradient(135deg, #12121a 0%, #171728 60%, #12121a 100%);
+        border-color: #2a2a40;
+      "
+    >
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs font-mono tracking-[0.28em] uppercase" style="color: #6b6b8a">
+            AI MISREAD
+          </p>
+          <h1 class="mt-2 text-2xl font-semibold leading-tight" style="color: #ffffff">
+            長く書ける。タイムラインには 3 語だけ残る。
+          </h1>
+          <p class="mt-3 text-sm leading-6" style="color: #6b6b8a">
+            投稿は AI が誤読して 3 単語に変換。推薦は 1
+            日ごとに集計され、いちばん推された投稿が翌日に
+            <RouterLink to="/recommend" class="underline" style="color: #a99af9"
+              >Daily Recommend</RouterLink
+            >
+            に出ます。
+          </p>
+        </div>
+        <p v-if="isLoggedIn && myRecommendations" class="text-xs font-mono" style="color: #f59e0b">
+          今日の残り推薦 {{ myRecommendations.remainingCount }}
+        </p>
+      </div>
+    </section>
     <div
       v-if="isLoggedIn"
       class="mb-8 overflow-hidden rounded-xl border"
@@ -71,8 +100,8 @@ const charColor = () => {
           v-model="content"
           rows="4"
           class="w-full resize-none bg-transparent text-sm leading-relaxed focus:outline-none"
-          style="color: #e8e8f0; caret-color: #a99af9"
-          placeholder="何でも書いてください。AIが3行に削ります。（Alt+Enter で送信）"
+          style="color: #ffffff; caret-color: #a99af9"
+          placeholder="何でも書いてください。AI が 3 行に盛大に誤読します。（Alt+Enter で送信）"
           :maxlength="charLimit"
           @keydown="handleKeydown"
         />
@@ -109,7 +138,7 @@ const charColor = () => {
           to="/login"
           class="transition-colors"
           style="color: #a99af9"
-          onmouseover="this.style.color = &quot;#e8e8f0&quot;;"
+          onmouseover="this.style.color = &quot;#ffffff&quot;;"
           onmouseout="this.style.color = &quot;#a99af9&quot;;"
           >ログイン</RouterLink
         >
