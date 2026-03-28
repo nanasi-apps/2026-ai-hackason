@@ -64,7 +64,7 @@ function handleReply() {
         <!-- Left connector: vertical line + ┗ hook -->
         <div class="flex flex-col items-center mr-3" style="width: 24px; padding-top: 2px">
           <div class="flex-1 w-px" style="background-color: #2a2a40; min-height: 16px"></div>
-          <span class="text-xs leading-none select-none" style="color: #3a3a55">┗</span>
+          <span class="text-xs leading-none select-none" style="color: #6b6b8a">┗</span>
         </div>
 
         <!-- Reply form or login prompt -->
@@ -91,7 +91,7 @@ function handleReply() {
                 <span v-if="replyError" class="text-xs" style="color: #e85d9a">{{
                   replyError
                 }}</span>
-                <span v-else class="text-xs font-mono" style="color: #3a3a55">{{
+                <span v-else class="text-xs font-mono" style="color: #6b6b8a">{{
                   replyContent.length || ""
                 }}</span>
                 <button
@@ -110,7 +110,7 @@ function handleReply() {
           </div>
 
           <div v-else class="py-1">
-            <p class="text-xs" style="color: #3a3a55">
+            <p class="text-xs" style="color: #6b6b8a">
               <RouterLink
                 to="/login"
                 style="color: #a99af9"
@@ -127,7 +127,7 @@ function handleReply() {
       <!-- Replies section -->
       <div class="mt-5">
         <div class="flex items-center gap-3 mb-3">
-          <span class="text-xs font-mono tracking-widest uppercase" style="color: #3a3a55">
+          <span class="text-xs font-mono tracking-widest uppercase" style="color: #6b6b8a">
             返信 ({{ note.replyCount }})
           </span>
           <div class="flex-1 h-px" style="background-color: #2a2a40"></div>
@@ -144,7 +144,7 @@ function handleReply() {
           <div v-for="reply in replies" :key="reply.id" class="flex">
             <div class="flex flex-col items-center mr-3" style="width: 24px; padding-top: 2px">
               <div class="flex-1 w-px" style="background-color: #2a2a40; min-height: 16px"></div>
-              <span class="text-xs leading-none select-none" style="color: #3a3a55">┗</span>
+              <span class="text-xs leading-none select-none" style="color: #6b6b8a">┗</span>
             </div>
             <div class="flex-1">
               <NoteCard :note="reply" />
@@ -152,7 +152,7 @@ function handleReply() {
           </div>
         </div>
         <div v-else class="text-center py-8">
-          <p class="text-sm font-mono" style="color: #3a3a55">まだ返信がありません</p>
+          <p class="text-sm font-mono" style="color: #6b6b8a">まだ返信がありません</p>
         </div>
       </div>
     </div>

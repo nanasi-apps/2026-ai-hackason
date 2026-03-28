@@ -132,13 +132,13 @@ function formatDate(dateStr: string) {
       </div>
 
       <div class="flex items-center gap-2">
-        <div v-if="note.replyTo" class="text-xs" style="color: #3a3a55">
+        <div v-if="note.replyTo" class="text-xs" style="color: #6b6b8a">
           <RouterLink
             :to="`/${note.replyTo}`"
             class="transition-colors"
-            style="color: #3a3a55"
+            style="color: #6b6b8a"
             onmouseover="this.style.color = &quot;#6b6b8a&quot;;"
-            onmouseout="this.style.color = &quot;#3a3a55&quot;;"
+            onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
           >
             ↩ 返信
           </RouterLink>
@@ -146,9 +146,9 @@ function formatDate(dateStr: string) {
         <RouterLink
           :to="`/${note.id}`"
           class="text-xs font-mono transition-colors"
-          style="color: #3a3a55"
+          style="color: #6b6b8a"
           onmouseover="this.style.color = &quot;#6b6b8a&quot;;"
-          onmouseout="this.style.color = &quot;#3a3a55&quot;;"
+          onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
         >
           {{ formatDate(note.createdAt) }}
         </RouterLink>
@@ -156,9 +156,9 @@ function formatDate(dateStr: string) {
           v-if="isOwner"
           @click="handleDelete"
           class="text-xs transition-colors"
-          style="color: #3a3a55"
+          style="color: #6b6b8a"
           onmouseover="this.style.color = &quot;#e85d9a&quot;;"
-          onmouseout="this.style.color = &quot;#3a3a55&quot;;"
+          onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
         >
           ×
         </button>
@@ -192,10 +192,9 @@ function formatDate(dateStr: string) {
       </div>
     </div>
 
-    <!-- Content -->
-    <div class="px-5 py-4">
-      <p class="text-sm leading-relaxed whitespace-pre-wrap break-words" style="color: #ffffff">
-        {{ note.content }}
+    <div v-if="props.full" class="px-5 py-4">
+      <p class="text-sm leading-6" style="color: #6b6b8a">
+        原文は返さず、MISREADER では AI の 3 行誤読だけを表示します。
       </p>
     </div>
 
@@ -205,9 +204,9 @@ function formatDate(dateStr: string) {
         @click="handleLike"
         :disabled="!isLoggedIn"
         class="flex items-center gap-2 transition-all duration-150 px-2 py-1.5 rounded-lg"
-        :style="localLiked ? 'color: #e85d9a;' : 'color: #3a3a55;'"
+        :style="localLiked ? 'color: #e85d9a;' : 'color: #6b6b8a;'"
         :onmouseover="isLoggedIn ? 'this.style.color=\'#e85d9a\'' : ''"
-        :onmouseout="localLiked ? 'this.style.color=\'#e85d9a\'' : 'this.style.color=\'#3a3a55\''"
+        :onmouseout="localLiked ? 'this.style.color=\'#e85d9a\'' : 'this.style.color=\'#6b6b8a\''"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -229,9 +228,9 @@ function formatDate(dateStr: string) {
       <RouterLink
         :to="`/${note.id}`"
         class="flex items-center gap-2 transition-colors px-2 py-1.5 rounded-lg"
-        style="color: #3a3a55"
+        style="color: #6b6b8a"
         onmouseover="this.style.color = &quot;#7c6af7&quot;;"
-        onmouseout="this.style.color = &quot;#3a3a55&quot;;"
+        onmouseout="this.style.color = &quot;#6b6b8a&quot;;"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -256,14 +255,14 @@ function formatDate(dateStr: string) {
           !isLoggedIn || remainingRecommendationCount <= 0 || recommendMutation.isPending.value
         "
         class="flex items-center gap-2 transition-all duration-150 disabled:opacity-40 px-2 py-1.5 rounded-lg"
-        :style="recommendationCountForNote > 0 ? 'color: #f59e0b;' : 'color: #3a3a55;'"
+        :style="recommendationCountForNote > 0 ? 'color: #f59e0b;' : 'color: #6b6b8a;'"
         :onmouseover="
           isLoggedIn && remainingRecommendationCount > 0 ? 'this.style.color=\'#f59e0b\'' : ''
         "
         :onmouseout="
           recommendationCountForNote > 0
             ? 'this.style.color=\'#f59e0b\''
-            : 'this.style.color=\'#3a3a55\''
+            : 'this.style.color=\'#6b6b8a\''
         "
       >
         <svg

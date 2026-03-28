@@ -105,7 +105,7 @@ function handleLogout() {
     </main>
 
     <!-- Footer -->
-    <footer class="text-center py-8 text-xs leading-6" style="color: #3a3a55">
+    <footer class="text-center py-8 text-xs leading-6" style="color: #6b6b8a">
       <span class="block">長く書く。</span>
       <span class="block">AIが 3 行に削る。</span>
       <span class="block">残った言葉が、あなたの全部だ。</span>

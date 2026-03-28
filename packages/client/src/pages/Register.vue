@@ -46,7 +46,7 @@ async function handleRegister() {
       >
         今北産業SNS
       </h1>
-      <p class="text-xs font-mono tracking-widest uppercase" style="color: #3a3a55">
+      <p class="text-xs font-mono tracking-widest uppercase" style="color: #6b6b8a">
         誤読の世界へようこそ
       </p>
     </div>
@@ -111,7 +111,7 @@ async function handleRegister() {
       </form>
     </div>
 
-    <p class="text-center mt-5 text-xs" style="color: #3a3a55">
+    <p class="text-center mt-5 text-xs" style="color: #6b6b8a">
       すでにアカウントをお持ちの方は
       <RouterLink
         to="/login"

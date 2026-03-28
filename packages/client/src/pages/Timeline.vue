@@ -45,41 +45,12 @@ const charLimit = 5000;
 const charColor = () => {
   if (content.value.length > charLimit * 0.9) return "#e85d9a";
   if (content.value.length > charLimit * 0.7) return "#f59e0b";
-  return "#3a3a55";
+  return "#6b6b8a";
 };
 </script>
 
 <template>
   <div>
-    <section
-      class="mb-8 rounded-2xl border p-5"
-      style="
-        background: linear-gradient(135deg, #12121a 0%, #171728 60%, #12121a 100%);
-        border-color: #2a2a40;
-      "
-    >
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <p class="text-xs font-mono tracking-[0.28em] uppercase" style="color: #6b6b8a">
-            AI MISREAD
-          </p>
-          <h1 class="mt-2 text-2xl font-semibold leading-tight" style="color: #ffffff">
-            長く書ける。タイムラインには 3 語だけ残る。
-          </h1>
-          <p class="mt-3 text-sm leading-6" style="color: #6b6b8a">
-            投稿は AI が誤読して 3 単語に変換。推薦は 1
-            日ごとに集計され、いちばん推された投稿が翌日に
-            <RouterLink to="/recommend" class="underline" style="color: #a99af9"
-              >Daily Recommend</RouterLink
-            >
-            に出ます。
-          </p>
-        </div>
-        <p v-if="isLoggedIn && myRecommendations" class="text-xs font-mono" style="color: #f59e0b">
-          今日の残り推薦 {{ myRecommendations.remainingCount }}
-        </p>
-      </div>
-    </section>
     <div
       v-if="isLoggedIn"
       class="mb-8 overflow-hidden rounded-xl border"
@@ -101,7 +72,7 @@ const charColor = () => {
           rows="4"
           class="w-full resize-none bg-transparent text-sm leading-relaxed focus:outline-none"
           style="color: #ffffff; caret-color: #a99af9"
-          placeholder="何でも書いてください。AI が 3 行に盛大に誤読します。（Alt+Enter で送信）"
+          placeholder="何でも書いてください。（Alt+Enter で送信）"
           :maxlength="charLimit"
           @keydown="handleKeydown"
         />
@@ -165,7 +136,7 @@ const charColor = () => {
     </div>
 
     <div class="mb-4 flex items-center gap-3">
-      <span class="text-xs font-mono tracking-widest uppercase" style="color: #3a3a55"
+      <span class="text-xs font-mono tracking-widest uppercase" style="color: #6b6b8a"
         >タイムライン</span
       >
       <div class="h-px flex-1" style="background-color: #2a2a40"></div>
@@ -181,7 +152,7 @@ const charColor = () => {
       <NoteCard v-for="note in notes" :key="note.id" :note="note" />
     </div>
     <div v-else class="py-16 text-center">
-      <p class="text-sm font-mono" style="color: #3a3a55">まだ投稿がありません</p>
+      <p class="text-sm font-mono" style="color: #6b6b8a">まだ投稿がありません</p>
     </div>
   </div>
 </template>

@@ -43,7 +43,7 @@ async function handleLogin() {
       >
         今北産業SNS
       </h1>
-      <p class="text-xs font-mono tracking-widest uppercase" style="color: #3a3a55">
+      <p class="text-xs font-mono tracking-widest uppercase" style="color: #6b6b8a">
         おかえりなさい
       </p>
     </div>
@@ -107,7 +107,7 @@ async function handleLogin() {
       </form>
     </div>
 
-    <p class="text-center mt-5 text-xs" style="color: #3a3a55">
+    <p class="text-center mt-5 text-xs" style="color: #6b6b8a">
       アカウントをお持ちでない方は
       <RouterLink
         to="/register"
