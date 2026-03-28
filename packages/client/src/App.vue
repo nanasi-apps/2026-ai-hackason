@@ -106,8 +106,10 @@ function handleLogout() {
     </main>
 
     <!-- Footer -->
-    <footer class="text-center py-8 text-xs" style="color: #3a3a55">
-      今北産業SNS — あなたの言葉を、AIが盛大に誤読する
+    <footer class="text-center py-8 text-xs leading-6" style="color: #3a3a55">
+      <span class="block">長く書く。</span>
+      <span class="block">AIが 3 行に削る。</span>
+      <span class="block">残った言葉が、あなたの全部だ。</span>
     </footer>
   </div>
 </template>

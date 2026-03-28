@@ -20,13 +20,16 @@ const { user, isLoggedIn } = useAuth();
 const queryClient = useQueryClient();
 
 const isOwner = computed(() => user.value?.id === props.note.userId);
-const summaryWords = computed(() => {
-  const words = props.note.summary
-    ?.split(/[/\s　]+/)
+const summaryLines = computed(() => {
+  const lines = props.note.summary
+    ?.split(/\n/)
+    .map((l) => l.trim())
     .filter(Boolean)
     .slice(0, 3);
 
-  return words && words.length > 0 ? words : ["誤読", "保留", "気配"];
+  return lines && lines.length > 0
+    ? lines
+    : ["言葉が滲んだ。", "誰かに届いた。", "それだけでいい。"];
 });
 
 const localLiked = ref(props.note.liked);
@@ -106,14 +109,14 @@ function formatDate(dateStr: string) {
           class="rounded px-2 py-0.5 text-xs font-mono tracking-widest uppercase"
           style="color: #7c6af7; background-color: #7c6af720; border: 1px solid #7c6af740"
         >
-          AI 誤読
+          AI 3行
         </span>
       </div>
-      <div class="flex flex-col gap-0.5">
+      <div class="flex flex-col gap-1">
         <span
-          v-for="(word, i) in summaryWords"
+          v-for="(line, i) in summaryLines"
           :key="`${note.id}-${i}`"
-          class="text-lg font-bold tracking-tight leading-snug"
+          class="text-sm font-medium leading-relaxed"
           style="
             font-family: &quot;Space Mono&quot;, monospace;
             background: linear-gradient(135deg, #a99af9 0%, #e85d9a 100%);
@@ -121,7 +124,7 @@ function formatDate(dateStr: string) {
             -webkit-text-fill-color: transparent;
             background-clip: text;
           "
-          >{{ word }}</span
+          >{{ line }}</span
         >
       </div>
     </div>
