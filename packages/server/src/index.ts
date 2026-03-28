@@ -149,7 +149,9 @@ async function enrichNotes(
     )
     .groupBy(recommendations.noteId);
 
-  const recommendationCountMap = new Map(recommendationCounts.map((item) => [item.noteId, item.count]));
+  const recommendationCountMap = new Map(
+    recommendationCounts.map((item) => [item.noteId, item.count]),
+  );
 
   // Get user's likes for current user
   let likedSet = new Set<string>();
@@ -204,7 +206,10 @@ async function getRemainingRecommendations(db: DrizzleD1Database, userId: string
     .select({ count: count() })
     .from(recommendations)
     .where(
-      and(eq(recommendations.userId, userId), sql`date(${recommendations.createdAt}) = date('now')`),
+      and(
+        eq(recommendations.userId, userId),
+        sql`date(${recommendations.createdAt}) = date('now')`,
+      ),
     );
 
   return Math.max(RECOMMEND_LIMIT - result.count, 0);
@@ -219,10 +224,7 @@ async function refreshNoteUnlockState(db: DrizzleD1Database, noteId: string) {
   const recommendCount = result.count;
   const unlocked = recommendCount >= UNLOCK_THRESHOLD;
 
-  await db
-    .update(notes)
-    .set({ recommendCount, isUnlocked: unlocked })
-    .where(eq(notes.id, noteId));
+  await db.update(notes).set({ recommendCount, isUnlocked: unlocked }).where(eq(notes.id, noteId));
 
   return { recommendCount, unlocked };
 }
@@ -493,7 +495,12 @@ const topRecommended = os.note.topRecommended.handler(async ({ input, context })
     .select({ note: notes, author: users })
     .from(notes)
     .innerJoin(users, eq(notes.userId, users.id))
-    .where(sql`${notes.id} IN (${sql.join(ids.map((id) => sql`${id}`), sql`, `)})`);
+    .where(
+      sql`${notes.id} IN (${sql.join(
+        ids.map((id) => sql`${id}`),
+        sql`, `,
+      )})`,
+    );
 
   const enriched = await enrichNotes(ctx.db, rows, currentUserId);
   const orderMap = new Map(ids.map((id, index) => [id, index]));
@@ -657,7 +664,10 @@ const recommendListMine = os.recommend.listMine.handler(async ({ context }) => {
     .select()
     .from(recommendations)
     .where(
-      and(eq(recommendations.userId, auth.userId), sql`date(${recommendations.createdAt}) = date('now')`),
+      and(
+        eq(recommendations.userId, auth.userId),
+        sql`date(${recommendations.createdAt}) = date('now')`,
+      ),
     )
     .orderBy(desc(recommendations.createdAt));
 

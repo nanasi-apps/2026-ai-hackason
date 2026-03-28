@@ -23,7 +23,7 @@
 | Contract | `@orpc/contract` + `zod` (API契約定義)                    |
 | Server   | Cloudflare Workers + D1 (SQLite) + Drizzle ORM            |
 | Client   | Vue 3 + Vite + Tailwind CSS v4 + TanStack Vue Query       |
-| AI要約   | Cloudflare Workers AI（3単語要約を Phase 2 で対応）      |
+| AI要約   | Cloudflare Workers AI（3単語要約を Phase 2 で対応）       |
 | 認証     | ユーザー名 + パスワード（bcryptハッシュ + JWTセッション） |
 
 ---
@@ -39,13 +39,13 @@
 
 ## ルーティング
 
-| パス              | 画面                                      |
-| ----------------- | ----------------------------------------- |
-| `/`               | タイムライン（3単語要約付き投稿一覧 + 投稿フォーム + 推薦Top 3） |
+| パス              | 画面                                                              |
+| ----------------- | ----------------------------------------------------------------- |
+| `/`               | タイムライン（3単語要約付き投稿一覧 + 投稿フォーム + 推薦Top 3）  |
 | `/:noteId`        | 投稿の個別表示 + 返信一覧（本人、または解放済み投稿のみ原文表示） |
-| `/login`          | ログイン                                  |
-| `/register`       | アカウント登録                            |
-| `/user/:username` | ユーザーの投稿一覧                        |
+| `/login`          | ログイン                                                          |
+| `/register`       | アカウント登録                                                    |
+| `/user/:username` | ユーザーの投稿一覧                                                |
 
 ---
 
@@ -62,16 +62,16 @@
 
 ### notes テーブル
 
-| カラム     | 型                   | 説明                                    |
-| ---------- | -------------------- | --------------------------------------- |
-| id         | TEXT (PK)            | UUID                                    |
-| user_id    | TEXT (FK → users.id) | 投稿者                                  |
-| content    | TEXT (NOT NULL)      | 原文                                    |
-| summary    | TEXT                 | AI生成の3単語要約（Phase 2）            |
-| recommend_count | INTEGER          | 推薦数                                  |
-| is_unlocked | INTEGER             | 原文解放済みか                          |
-| reply_to   | TEXT (FK → notes.id) | 返信先のnote ID（NULLならトップレベル） |
-| created_at | TEXT                 | 投稿日時                                |
+| カラム          | 型                   | 説明                                    |
+| --------------- | -------------------- | --------------------------------------- |
+| id              | TEXT (PK)            | UUID                                    |
+| user_id         | TEXT (FK → users.id) | 投稿者                                  |
+| content         | TEXT (NOT NULL)      | 原文                                    |
+| summary         | TEXT                 | AI生成の3単語要約（Phase 2）            |
+| recommend_count | INTEGER              | 推薦数                                  |
+| is_unlocked     | INTEGER              | 原文解放済みか                          |
+| reply_to        | TEXT (FK → notes.id) | 返信先のnote ID（NULLならトップレベル） |
+| created_at      | TEXT                 | 投稿日時                                |
 
 ### likes テーブル
 
@@ -86,12 +86,12 @@
 
 ### recommendations テーブル
 
-| カラム     | 型                   | 説明                       |
-| ---------- | -------------------- | -------------------------- |
-| id         | TEXT (PK)            | UUID                       |
-| user_id    | TEXT (FK → users.id) | 推薦したユーザー           |
-| note_id    | TEXT (FK → notes.id) | 推薦先の投稿               |
-| created_at | TEXT                 | 推薦日時                   |
+| カラム     | 型                   | 説明             |
+| ---------- | -------------------- | ---------------- |
+| id         | TEXT (PK)            | UUID             |
+| user_id    | TEXT (FK → users.id) | 推薦したユーザー |
+| note_id    | TEXT (FK → notes.id) | 推薦先の投稿     |
+| created_at | TEXT                 | 推薦日時         |
 
 > 1ユーザーが持てる推薦は最大3件。同一投稿に3件入れても、別々の投稿に1件ずつ使ってもよい
 
@@ -109,16 +109,16 @@
 
 ### Note（投稿）
 
-| エンドポイント    | Input                             | Output                                   |
-| ----------------- | --------------------------------- | ---------------------------------------- |
-| `note.create`     | `{ content, replyTo? }` ※認証必須 ※contentは最大5,000文字 | `{ note }` (著者+いいね数+返信数+推薦数付き)    |
-| `note.list`       | `{ limit?, offset? }`             | `{ notes[] }` (著者+いいね数+返信数+推薦数付き) |
-| `note.get`        | `{ id }`                          | `{ note }` (著者+いいね数+返信数+推薦数付き。原文は本人または解放済みのみ) |
-| `note.delete`     | `{ id }` ※自分の投稿のみ          | `{ success }`                            |
-| `note.listByUser` | `{ username, limit?, offset? }`   | `{ notes[] }`                            |
-| `note.replies`    | `{ noteId, limit?, offset? }`     | `{ notes[] }` (その投稿への返信一覧)     |
-| `note.topRecommended` | `{ limit? }`                  | `{ notes[] }` (当日推薦数の多い順。UI補助用) |
-| `note.dailyWinner` | なし | `{ day, note }` (前日集計で最も推薦された投稿) |
+| エンドポイント        | Input                                                     | Output                                                                     |
+| --------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `note.create`         | `{ content, replyTo? }` ※認証必須 ※contentは最大5,000文字 | `{ note }` (著者+いいね数+返信数+推薦数付き)                               |
+| `note.list`           | `{ limit?, offset? }`                                     | `{ notes[] }` (著者+いいね数+返信数+推薦数付き)                            |
+| `note.get`            | `{ id }`                                                  | `{ note }` (著者+いいね数+返信数+推薦数付き。原文は本人または解放済みのみ) |
+| `note.delete`         | `{ id }` ※自分の投稿のみ                                  | `{ success }`                                                              |
+| `note.listByUser`     | `{ username, limit?, offset? }`                           | `{ notes[] }`                                                              |
+| `note.replies`        | `{ noteId, limit?, offset? }`                             | `{ notes[] }` (その投稿への返信一覧)                                       |
+| `note.topRecommended` | `{ limit? }`                                              | `{ notes[] }` (当日推薦数の多い順。UI補助用)                               |
+| `note.dailyWinner`    | なし                                                      | `{ day, note }` (前日集計で最も推薦された投稿)                             |
 
 ### Like（いいね）
 
@@ -129,11 +129,11 @@
 
 ### Recommendation（推薦）
 
-| エンドポイント | Input | Output |
-| -------------- | ----- | ------ |
-| `recommend.create` | `{ noteId }` ※認証必須 | `{ recommendation, recommendCount, remainingCount, day }` |
-| `recommend.delete` | `{ recommendationId }` ※認証必須 | `{ success, recommendCount, remainingCount, day }` |
-| `recommend.listMine` | なし ※認証必須 | `{ recommendations[], remainingCount, day }` |
+| エンドポイント       | Input                            | Output                                                    |
+| -------------------- | -------------------------------- | --------------------------------------------------------- |
+| `recommend.create`   | `{ noteId }` ※認証必須           | `{ recommendation, recommendCount, remainingCount, day }` |
+| `recommend.delete`   | `{ recommendationId }` ※認証必須 | `{ success, recommendCount, remainingCount, day }`        |
+| `recommend.listMine` | なし ※認証必須                   | `{ recommendations[], remainingCount, day }`              |
 
 ---
 

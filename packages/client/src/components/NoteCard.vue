@@ -31,7 +31,9 @@ const { data: myRecommendations } = useQuery({
 });
 
 const recommendationCountForNote = computed(
-  () => myRecommendations.value?.recommendations.filter((item) => item.noteId === props.note.id).length ?? 0,
+  () =>
+    myRecommendations.value?.recommendations.filter((item) => item.noteId === props.note.id)
+      .length ?? 0,
 );
 
 const remainingRecommendationCount = computed(() => myRecommendations.value?.remainingCount ?? 0);
@@ -115,7 +117,10 @@ const displayContent = computed(() => {
       <RouterLink :to="`/${note.replyTo}`" class="hover:underline"> Replying to a post </RouterLink>
     </div>
 
-    <div v-if="isLocked" class="rounded-md border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+    <div
+      v-if="isLocked"
+      class="rounded-md border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900"
+    >
       <p class="font-medium">Original text is locked.</p>
       <p class="mt-1 text-amber-800">
         Daily recommendations are aggregated at the end of the day. The top note opens tomorrow.
@@ -181,7 +186,9 @@ const displayContent = computed(() => {
 
       <button
         @click="handleRecommend"
-        :disabled="!isLoggedIn || remainingRecommendationCount <= 0 || recommendMutation.isPending.value"
+        :disabled="
+          !isLoggedIn || remainingRecommendationCount <= 0 || recommendMutation.isPending.value
+        "
         class="flex items-center gap-1 text-sm text-amber-600 transition-colors disabled:text-gray-300"
       >
         <svg
@@ -195,7 +202,9 @@ const displayContent = computed(() => {
           />
         </svg>
         <span>{{ note.recommendCount }}</span>
-        <span v-if="isLoggedIn" class="text-xs text-gray-400">today {{ remainingRecommendationCount }} left</span>
+        <span v-if="isLoggedIn" class="text-xs text-gray-400"
+          >today {{ remainingRecommendationCount }} left</span
+        >
         <span v-if="recommendationCountForNote > 0" class="text-xs text-amber-700">
           あなた{{ recommendationCountForNote }}
         </span>

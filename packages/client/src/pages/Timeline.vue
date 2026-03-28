@@ -37,19 +37,26 @@ function handlePost() {
 
 <template>
   <div>
-    <div class="mb-6 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4">
+    <div
+      class="mb-6 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4"
+    >
       <div class="flex items-center justify-between gap-4">
         <div>
           <p class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Recommend</p>
-          <h2 class="mt-1 text-lg font-semibold text-gray-900">Daily aggregation opens tomorrow's winner</h2>
+          <h2 class="mt-1 text-lg font-semibold text-gray-900">
+            Daily aggregation opens tomorrow's winner
+          </h2>
         </div>
         <p v-if="isLoggedIn && myRecommendations" class="text-sm text-amber-800">
           Remaining today: {{ myRecommendations.remainingCount }}
         </p>
       </div>
       <p class="mt-3 text-sm leading-6 text-gray-600">
-        Recommendations are collected through the day. The most recommended note is opened on the next day in
-        <RouterLink to="/recommend" class="font-medium text-amber-800 underline">Daily Recommend</RouterLink>.
+        Recommendations are collected through the day. The most recommended note is opened on the
+        next day in
+        <RouterLink to="/recommend" class="font-medium text-amber-800 underline"
+          >Daily Recommend</RouterLink
+        >.
       </p>
     </div>
 
