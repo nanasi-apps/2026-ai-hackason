@@ -1,0 +1,10 @@
+name = "aihackason-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-30"
+assets = { directory = "../client/dist", binding = "ASSETS" }
+
+[[d1_databases]]
+binding = "DB"
+database_name = "aihackason-db"
+database_id = "placeholder-id"
+migrations_dir = "drizzle"

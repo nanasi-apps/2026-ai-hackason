@@ -1,0 +1,26 @@
+{
+  "name": "@aihackason/server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply aihackason-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply aihackason-db --remote",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@aihackason/contract": "workspace:*",
+    "@orpc/contract": "latest",
+    "@orpc/server": "latest",
+    "drizzle-orm": "^0.45.2",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241230.0",
+    "drizzle-kit": "^0.31.10",
+    "typescript": "^5.7.0",
+    "wrangler": "^4.0.0"
+  }
+}

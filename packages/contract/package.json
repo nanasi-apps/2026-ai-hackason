@@ -1,0 +1,16 @@
+{
+  "name": "@aihackason/contract",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@orpc/contract": "latest",
+    "zod": "^3.24.0"
+  }
+}
